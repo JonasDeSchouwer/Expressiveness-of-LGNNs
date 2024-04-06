@@ -1,0 +1,179 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2023
+
+
+% ready for submission
+\usepackage[final]{neurips_2023}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2023}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2023}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2023}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+
+% OWN PACKAGES AND SETTINGS
+
+\usepackage{amsmath,amsthm,amssymb} % for the common "math symbols"
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+
+
+
+% STRUCTURE
+\newtheorem{theorem}{Theorem}
+
+
+% CUSTOM COMMANDS
+\newcommand{\iter}[1][t]{^{(#1)}}
+\newcommand{\wl}{\text{wl}}
+\newcommand{\wledge}{\text{wl-ed}}
+\newcommand{\lwl}{\text{lwl}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\newcommand{\mca}{\mathcal{A}}
+\newcommand{\mcb}{\mathcal{B}}
+\newcommand{\mcc}{\mathcal{C}}
+\newcommand{\mcd}{\mathcal{D}}
+\newcommand{\mck}{\mathcal{K}}
+\newcommand{\mcl}{\mathcal{L}}
+\newcommand{\mcm}{\mathcal{M}}
+\newcommand{\mcn}{\mathcal{N}}
+\newcommand{\mcq}{\mathcal{Q}}
+\newcommand{\mcs}{\mathcal{S}}
+
+\newcommand{\mbb}{\mathbb{B}}
+\newcommand{\mbe}{\mathbb{E}}
+\newcommand{\mbi}{\mathbb{I}}
+\newcommand{\mbk}{\mathbb{K}}
+\newcommand{\mbn}{\mathbb{N}}
+\newcommand{\mbr}{\mathbb{R}}
+\newcommand{\mbz}{\mathbb{Z}}
+
+\newcommand{\msk}{\mathscr{K}}
+\newcommand{\msl}{\mathscr{L}}
+\newcommand{\msw}{\mathscr{W}}
+
+
+
+\title{Expressiveness of Line Graph Neural Networks}
+\author{%
+    1083152
+}
+
+
+\begin{document}
+\maketitle
+
+
+\begin{abstract}
+
+\end{abstract}
+
+
+\section{Introduction}
+% Start with graph structured data - ubiquitous in real-world applications, such as social networks, biological networks, recommendation systems, material science, traffic networks, etc.
+
+% Graph neural networks
+
+% Line graph neural networks - especially natural for the task of link prediction
+
+% Expressive power
+
+% State research question
+
+% Summarize contributions
+
+
+
+\section{Related Work}
+
+\paragraph{Graph Neural Networks}
+% focus on isomorphism and permutation invariance/equivariance
+
+
+\paragraph{Expressiveness}
+% start with expressive power of neural networks in general
+% then move to graph neural networks
+% state both graph/node distinguishability and function approximation as ways to characterize expressiveness
+% 
+
+\paragraph{Line Graph Neural Networks}
+
+
+
+\section{Background}
+
+\paragraph{Graphs}
+% + Line graphs
+
+\paragraph{Graph Neural Networks}
+% Framework with update/aggregate functions
+
+\paragraph{Graph Colourings and }
+
+
+
+
+\section{Proposed Approach}
+
+
+
+
+\section{Theory}
+% define lwl and wledge
+% prove that lwl is less powerful than wledge
+% prove that wl is equally powerful as wledge
+% connection to k-wl
+
+\subsection{Line Graph MPNN framework}
+
+In line with the usual message passing neural network (MPNN) framework \cite{gilmer2017neural}, we define the following fram
+
+
+\subsection{Two variants of the Weisfeiler-Leman test for edge colouring}
+
+The usual Weisfeiler-Leman algorithm iteratively generates node colourings $\wl\iter{0}(G), \wl\iter{1}(G), \dots$ to the nodes of a graph $G$. To  
+
+
+
+
+\section{Experiments}
+
+
+
+\section{Outlook and Conclusion}
+
+
+
+
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+
+\end{document}
