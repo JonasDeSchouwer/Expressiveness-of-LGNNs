@@ -50,22 +50,34 @@
 
 
 % CUSTOM COMMANDS
-\newcommand{\iter}[1][t]{^{(#1)}}
-\newcommand{\wl}{\text{wl}}
-\newcommand{\wledge}{\text{wl-ed}}
-\newcommand{\lwl}{\text{lwl}}
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\multiset}[1]{\left\{\!\!\left\{#1\right\}\!\!\right\}}
+\newcommand{\iter}[1]{^{(#1)}}
+\newcommand{\wl}{\texttt{wl}}
+\newcommand{\wledge}{\texttt{wl-ed}}
+\newcommand{\lwl}{\texttt{lwl}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\upd}{\texttt{UPD}}
+\newcommand{\agg}{\texttt{AGG}}
+\newcommand{\dec}{\xi}
+\newcommand{\hash}{\tau}
+\newcommand{\nbh}{\mathcal{N}}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+\newcommand{\feat}{\bs{h}}
 
 \newcommand{\mca}{\mathcal{A}}
 \newcommand{\mcb}{\mathcal{B}}
 \newcommand{\mcc}{\mathcal{C}}
 \newcommand{\mcd}{\mathcal{D}}
+\newcommand{\mce}{\mathcal{E}}
 \newcommand{\mck}{\mathcal{K}}
 \newcommand{\mcl}{\mathcal{L}}
 \newcommand{\mcm}{\mathcal{M}}
 \newcommand{\mcn}{\mathcal{N}}
 \newcommand{\mcq}{\mathcal{Q}}
 \newcommand{\mcs}{\mathcal{S}}
+\newcommand{\mct}{\mathcal{T}}
+\newcommand{\mcv}{\mathcal{V}}
 
 \newcommand{\mbb}{\mathbb{B}}
 \newcommand{\mbe}{\mathbb{E}}
@@ -127,10 +139,13 @@
 
 
 
-\section{Background}
+\section{Background}    \label{sec:background}
+% Summary of notations?
 
 \paragraph{Graphs}
 % + Line graphs
+% + Graph Colourings
+% + Node colourings of line graphs
 
 \paragraph{Graph Neural Networks}
 % Framework with update/aggregate functions
@@ -146,21 +161,136 @@
 
 
 \section{Theory}
+% TODO: write something about edge colour initializations
+
 % define lwl and wledge
 % prove that lwl is less powerful than wledge
 % prove that wl is equally powerful as wledge
 % connection to k-wl
 
-\subsection{Line Graph MPNN framework}
-
-In line with the usual message passing neural network (MPNN) framework \cite{gilmer2017neural}, we define the following fram
+In this section we study the expressive power of Line Graph MPNNs (LG-MPNNs), which we define as MPNNs (outlined in Section \ref{sec:background}) applied to the line graph of a graph $G$.
+The \emph{Line GNNs} proposed in \cite{cai2021line} fall under this framework.
+We do this from a theoretical graph isomorphism testing perspective, by comparing them to variations of the WL-test in terms of their power to distinguish non-isomorphic graphs.
+Because Line Graph MPNNs compute edge features of the original graph rather than node features, we devise two new variations of the standard WL-test that are also tailored to computing edge colourings. 
+Afterwards, we relate the expressive power of both these variations to each other, to Line Graph MPNNs, and to the standard WL-test.
 
 
 \subsection{Two variants of the Weisfeiler-Leman test for edge colouring}
 
-The usual Weisfeiler-Leman algorithm iteratively generates node colourings $\wl\iter{0}(G), \wl\iter{1}(G), \dots$ to the nodes of a graph $G$. To  
+The first variant of the WL-test we introduce is the \emph{Line Weisfeiler-Leman Test}, denoted $\lwl$, which is a direct application of the standard WL-algorithm to the line graph. Concretely, we define the $\lwl$ algorithm as follows:
+\begin{itemize}
+    \item Initialize the colour of each node $uv \in V(L(G))$ to $\lwl\iter{0}(G)(uv) = \dec(\set{c(u),c(v)})$, where $\dec$ is an injective function from $\mcc^2$ to $\mcc$. Note that such a function exists, because we can choose $\mcc$ to be countable (e.g. $\mcc = \mbn$), in which case the cardinalities of $\mcc^2$ and $\mcc$ are equal.
+    \item Iteratively update the colour of each node $uv \in V(L(G))$ as follows:
+    \begin{equation}
+        \lwl\iter{t+1}(G)(uv) = \hash\left(\lwl\iter{t+1}(G)(uv), \multiset{\lwl\iter{t}(G)(xy) \mid xy \in \nbh(uv)}\right)
+    \end{equation}
+    where $\hash$ is an injective map from $\mcc\times\mbn^\mcc$ to $\mcc$. We remind the reader that $\nbh(uv)$ denotes the neighbourhood of $uv$ in $L(G)$, i.e. $\nbh(uv) = \set{d_uv \mid d_u \in \nbh_G(u)} \cup \set{ud_v \mid d_v \in \nbh_G(v)}$.
+\end{itemize}
+The design choice of initializing the colour of $uv$ to $\dec(\set{c(u),c(v)})$ is a natural and general way to encode the initial node colours of $u$ and $v$ into the edge colour of $uv$ in a permutation-invariant way. This permutation invariance is important, as $uv=vu$ in the line graph.
 
 
+The second variant we introduce is the \emph{Weisfeiler-Leman Test with Edge Decoding}, denoted $\wledge$, which enhances the standard WL-algorithm with an injective decoder $\dec: \mcc^2\rightarrow\mcc$ to transform the node colours into edge colours. 
+This decoder need not be the same as the one used in $\lwl$, but we overloaded the notation because the only thing that matters for the expressivity is that it is injective.
+Concretely, it applies the WL-algorithm to the original (coloured) graph $G$, computing a node colouring $\wl^t(G): V(G) \rightarrow \mcc$ at each iteration $t$. Then the edge colouring at iteration $t$ is computed as $\wledge\iter{t}(G)(uv) = \dec(\set{\wl^t(G)(u),\wl^t(G)(v)})$.
+
+
+In what follows, we will first prove that LG-MPNNs are at most as expressive as the $\lwl$-test and that there exist LG-MPNNs that are equally expressive as $\lwl$, where we measure expressiveness in terms of ability to distinguish non-isomorphic graphs.
+Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ and that $\wledge$ is equally expressive as the standard WL-test.
+
+\begin{theorem}
+    LG-MPNNs are at most as expressive as the $\lwl$-test. 
+\end{theorem}
+
+\begin{proof}
+    Previous work on the expressivity of standard MPNNs \cite{morris2019weisfeiler} has shown that, for any MPNN with $T$ layers, and for all labelled graphs $G$ and $t\in\set{0,\dots,T}$, the WL-test's node colouring $\wl\iter{t}(G)$ is a refinement of the MPNN's node features $\feat\iter{t}(G)$ at iteration $t$:
+    \begin{equation}
+        \wl\iter{t}(G) \preceq \feat\iter{t}(G)
+    \end{equation}
+
+    Applying this theorem to the line graph of $G$ with initial node colourings defined by $l: V(L(G)) \rightarrow \mcc: uv \mapsto \dec(\set{c(u),c(v)})$, one obtains that for any LG-MPNN with $T$ layers, and for all labelled graphs $G$ and $t\in\set{0,\dots,T}$:
+    \begin{equation}    \label{eq:lwl-refinement-of-lg-mpnn}
+        \lwl\iter{t}(G) \preceq \feat\iter{t}(G)
+    \end{equation}
+
+    In particular, if the LWL-test cannot distinguish between two non-isomorphic graphs $G_1$ and $G_2$, then that implies
+    \begin{equation}
+        \set{\lwl\iter{T}(G_1)(u) \mid u\in V(G_1)} = \set{\lwl\iter{T}(G_2) \mid u\in V(G_2)}
+    \end{equation}
+    Applying (\ref{eq:lwl-refinement-of-lg-mpnn}) to the joint graph $G=G_1\cup G_2$ yields 
+    \begin{equation}
+        \set{\feat\iter{T}(u) \mid u\in V(G_1)} = \set{\feat\iter{T}(u) \mid u\in V(G_2)}
+    \end{equation}
+    from which follows that the LG-MPNN cannot distinguish between $G_1$ and $G_2$ either.
+\end{proof}
+
+\begin{theorem}
+    There exists an LG-MPNNs that are equally expressive as the $\lwl$-test.
+\end{theorem}
+
+\begin{proof}
+    \cite{xu2018powerful} proved that for any finite set of graphs $\set{G_1, \dots, G_N}$ that are pairwise distinguishable by the WL-test, there exists an MPNN that can distinguish between them.
+    % For this they introduced the \emph{Graph Isomorphism Network} architecture.
+
+    Now consider any set $\set{G_1, \dots, G_N}$ that is pairwise distinguishable by the LWL-test. This is equivalent to saying $\set{L(G_1), \dots, L(G_N)}$ is pairwise distinguishable by the WL-test. From the previous result now follows that there exists an MPNN that can distinguish the line graphs, i.e. that there exists an LG-MPNN that can distinguish between the original graphs.
+\end{proof}
+
+\begin{theorem}
+    The $\lwl$-test is strictly less expressive than the $\wledge$-test.
+\end{theorem}
+
+
+\newlength{\WLOGarrowwidth}
+\settowidth{\WLOGarrowwidth}{$\stackrel{\text{WLOG}}{\Rightarrow}$}
+\newcommand{\RightarrowAsWideAsWLOGArrow}{\makebox[\WLOGarrowwidth][c]{$\Rightarrow$}}
+\begin{proof}
+    The proof of this theorem consists of two parts. First, we show that for any graph $G$, $\wledge\iter{t}(G) \preceq \lwl\iter{t}(G)$ for all $t\in\mbn$. Second, we show that there exist graphs $G_1$ and $G_2$ that are distinguishable by $\wledge$ but not by the $\lwl$.
+
+    For the first part, we prove the following by induction on $t$. For any graph $G$ and $t\in\mbn$:
+    \begin{equation}    \label{eq:wledge-refinement-of-lwl-induction-hypothesis}
+        \wledge\iter{t}(G) \preceq \lwl\iter{t}(G)
+    \end{equation}
+    Fix the graph $G$ and shorten the notation $\wl\iter{t} \coloneq \wl\iter{t}(G)$ for clarity (and analogous for $\lwl$ and $\wledge$). The base case $t=0$ is trivially true, because the initial edge colourings of $\wledge$ are the same as those of $\lwl$. For the induction step, assume (\ref{eq:wledge-refinement-of-lwl-induction-hypothesis}) holds for $t$. Then take any $uv, xy \in V(L(G))$ for which $\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)$. Due to the injectivity of $\hash$ and the decoders $\dec$, the following implications hold:
+    \begin{equation}
+        \begin{split}
+            &\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)
+            \\
+            &\RightarrowAsWideAsWLOGArrow
+            \set{\wl\iter{t+1}(u),\wl\iter{t+1}(v)} = \set{\wl\iter{t+1}(x),\wl\iter{t+1}(y)}
+            \\
+            &\makebox[\WLOGarrowwidth][c]{$\stackrel{\text{WLOG}}{\Rightarrow}$}
+            \enspace \wl\iter{t+1}(u) = \wl\iter{t+1}(x) \wedge \wl\iter{t+1}(v) = \wl\iter{t+1}(y)
+            \\
+            &\RightarrowAsWideAsWLOGArrow
+            \begin{cases}
+                \wl\iter{t}(u) = \wl\iter{t}(x) \wedge \multiset{\wl\iter{t}(d_u) \mid d_u \in \nbh(u)} = \multiset{\wl\iter{t}(d_x) \mid d_x \in \nbh(x)} \\
+                \wl\iter{t}(v) = \wl\iter{t}(y) \wedge \multiset{\wl\iter{t}(d_v) \mid d_v \in \nbh(v)} = \multiset{\wl\iter{t}(d_y) \mid d_y \in \nbh(y)}
+            \end{cases}
+            \\
+            &\RightarrowAsWideAsWLOGArrow 
+            \begin{cases}
+                \wledge\iter{t}(uv) = \wledge\iter{t}(xy) \\
+                \multiset{\wledge\iter{t}(ud_u) \mid d_u \in \nbh(u)} = \multiset{\wledge\iter{t}(xd_x) \mid d_x \in \nbh(x)} \\
+                \multiset{\wledge\iter{t}(vd_v) \mid d_v \in \nbh(v)} = \multiset{\wledge\iter{t}(yd_y) \mid d_y \in \nbh(y)}
+            \end{cases}
+            \\
+            &\makebox[\WLOGarrowwidth][c]{$\stackrel{(\ref{eq:wledge-refinement-of-lwl-induction-hypothesis})}{\Rightarrow}$}
+            \begin{cases}
+                \lwl\iter{t}(uv) = \lwl\iter{t}(xy) \\
+                \multiset{\lwl\iter{t}(ud_u) \mid d_u \in \nbh(u)} = \multiset{\lwl\iter{t}(xd_x) \mid d_x \in \nbh(x)} \\
+                \multiset{\lwl\iter{t}(vd_v) \mid d_v \in \nbh(v)} = \multiset{\lwl\iter{t}(yd_y) \mid d_y \in \nbh(y)}
+            \end{cases}
+            \\
+            &\RightarrowAsWideAsWLOGArrow
+            \lwl\iter{t+1}(uv) = \lwl\iter{t+1}(xy)
+        \end{split}
+    \end{equation}
+    Because this holds for all $uv,xy\in V(L(G))$, we have shown that $\wledge\iter{t+1}(G) \preceq \lwl\iter{t+1}(G)$, which concludes the induction step.
+    
+    % TODO: draw conclusions for `graph distinguishability'
+
+    For the second part, consider the following two graphs $G_1$ and $G_2$:
+    % TODO: draw the graphs
+\end{proof}
 
 
 \section{Experiments}
@@ -169,7 +299,10 @@ The usual Weisfeiler-Leman algorithm iteratively generates node colourings $\wl\
 
 \section{Outlook and Conclusion}
 
-
+% Extend to edge-attributed graphs
+% Extend to directed graphs
+% Extend to higher-order lemmas
+% Extend to knowledge graphs
 
 
 \bibliographystyle{unsrt}
