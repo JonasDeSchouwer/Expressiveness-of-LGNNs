@@ -110,32 +110,56 @@
 
 \section{Introduction}
 % Start with graph structured data - ubiquitous in real-world applications, such as social networks, biological networks, recommendation systems, material science, traffic networks, etc.
-
+Graphs are a natural way to structure data in many application domains, such as social networks, biological networks, recommendation systems, materials science, traffic networks, etc.
 % Graph neural networks
+Following the many successes of deep learning, graph machine learning has emerged as a powerful tool to learn from graph-structured data. There are various tasks that are of interest, including classification, link prediction and property prediction, but also graph generation and community detection.
 
 % Line graph neural networks - especially natural for the task of link prediction
+Recently, several works have investigated the use of line graphs in graph machine learning \cite{cai2021line,choudhary2021atomistic}. Line graphs offer a dual perspective on the original graph, where nodes in the line graph correspond to edges in the original graph. This perspective is especially natural for the task of link prediction, as it converts a classification task on pairs of nodes to the simpler and better studied task of node classification.
 
 % Expressive power
-
+The theoretical understanding of these models, however, is still in its infancy.
 % State research question
+In this work we therefore aim to characterize the expressive power of graph neural networks operating on line graphs. We will specifically focus on message-passing neural networks operating on line graphs, henceforth called Line Graph MPNNs (LG-MPNNs).
 
 % Summarize contributions
-
+Our contributions can be summarized as follows:
+\begin{itemize}
+    \item We introduce two new variations of the Weisfeiler-Leman test tailored to edge colourings, which we call the \emph{Line Weisfeiler-Leman Test} (LWL) and the \emph{Weisfeiler-Leman Test with Edge Decoding} (WL-ED).
+    \item We prove both an upper and a lower bound on the expressivity of LG-MPNNs: they are at most as expressive as LWL and there exist Line Graph MPNNs that are equally expressive as LWL.
+    \item We relate LWL and WL-ED to each other and to the standard Weisfeiler-Leman test for node colouring. We prove that LWL is strictly less expressive than WL-ED and that WL-ED is equally expressive as the standard Weisfeiler-Leman test.
+\end{itemize}
 
 
 \section{Related Work}
 
 \paragraph{Graph Neural Networks}
 % focus on isomorphism and permutation invariance/equivariance
+Graph neural networks (GNNs) are a class of neural networks specifically designed to operate on graph-structured data \cite{scarselli2008graph}. One of the key challenges in designing GNNs is handling the inherent permutation invariance of graphs: since a graph with permuted node labels is still the same graph, the output of the network should not be affected by the ordering of the node labels either.
+% message passing
+The most commonly used class of GNNs are message passing neural networks (MPNNs) \cite{gilmer2017neural}, which iteratively update node features by aggregating information from neighbouring nodes. Many GNN architectures fall under this framework, including the Basic GNN model \cite{hamilton2020graph}, GAT \cite{velickovic2017graph}, and Graph Isomorphism Networks \cite{xu2018powerful}.
 
 
 \paragraph{Expressiveness}
 % start with expressive power of neural networks in general
 % then move to graph neural networks
 % state both graph/node distinguishability and function approximation as ways to characterize expressiveness
-% 
+The expressive power of a parametrized model refers to the range of functions and patterns that it can represent. 
+% TODO: something about general neural networks?
+In the context of graph neural networks, there are various ways to characterize expressiveness. The most common one is the ability to distinguish non-isomorphic graphs, but function approximation \cite{maron2019universality}, substructure counting ability \cite{chen2020can}, spectral decomposition ability \cite{balcilar2020analyzing} and logical representation ability \cite{barcelo2020logical} are other viable options. Interestingly, \cite{chen2019equivalence} showed a theoretical equivalence between the expressiveness in terms of graph distinguishability and function approximation on graphs.
+
+In this work, we mainly focus on expressiveness in terms of distinguishing non-isomorphic graphs.
+The usual way to quantify this expressiveness is through a comparison with various forms of the Weisfeiler-Leman (WL) test \cite{weisfeiler1968reduction}. Importantly, MPNNs are known to be at most as expressive as the standard WL-test \cite{morris2019weisfeiler}, while \cite{xu2018powerful} constructed a class of GNNs that is equally expressive as WL. Other works have introduced other variations of the WL-test, such as the $k$-WL hierarchy from \cite{morris2019weisfeiler} and the Relational Asymmetric Local 2-WL from \cite{huang2024theory}.
+Our work aligns with this line of research by introducing two new variations of the WL-test tailored to edge colourings, by characterizing the expressive power of LG-MPNNs in terms of these tests, and by placing these tests in the $k$-WL hierarchy.
+
+
 
 \paragraph{Line Graph Neural Networks}
+Most methods that use line graphs in graph machine learning do so in combination with the original graph \cite{choudhary2021atomistic,chen2017supervised,jiang2019censnet,zhang2023line}. For example, \cite{zhang2023line} runs GNNs on the original graph and the line graph in parallel, and then maximizes the mutual information between the two outputs.
+Further, it should be noted that most methods that compute edge attributes, e.g. 
+Generalized Message Passing \cite{battaglia2018relational}, could also be regarded as operating on the line graph.
+A few approaches have also been proposed that operate only on the line graph, such as LGLP \cite{cai2021line} and INDIGO \cite{liu2021indigo}
+We limit the scope of this study to these approaches, as their analysis will also be of benefit to the compound methods. To the best of our knowledge, no work has yet been done on the theoretical analysis of these models.
 
 
 
@@ -150,7 +174,7 @@
 \paragraph{Graph Neural Networks}
 % Framework with update/aggregate functions
 
-\paragraph{Graph Colourings and }
+\paragraph{Graph Colourings}
 
 
 
@@ -288,7 +312,28 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ and that 
     
     % TODO: draw conclusions for `graph distinguishability'
 
-    For the second part, consider the following two graphs $G_1$ and $G_2$:
+
+    \begin{figure}[ht]
+        \centering
+        \begin{subfigure}[b]{0.3\textwidth}
+            \includegraphics[width=\textwidth]{figures/lwl vs wl-ed/G1.png}
+            \caption{$G_1$}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.3\textwidth}
+            \includegraphics[width=\textwidth]{figures/lwl vs wl-ed/G2.png}
+            \caption{$G_2$}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.3\textwidth}
+            \includegraphics[width=\textwidth]{figures/lwl vs wl-ed/L(G1)-L(G2).png}
+            \caption{$L(G_1)=L(G_2)$}
+        \end{subfigure}
+        \caption{Example of graphs $G_1$, $G_2$ that can be distinguished by $\wledge$ but not by $\lwl$.}
+        \label{fig:lwl-wledge-counterexample}
+    \end{figure}
+
+    For the second part, consider the graphs $G_1$ and $G_2$ depicted in Figure \ref{fig:lwl-wledge-counterexample}.
     % TODO: draw the graphs
 \end{proof}
 
