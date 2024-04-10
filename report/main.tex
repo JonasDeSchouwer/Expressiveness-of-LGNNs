@@ -277,14 +277,42 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
 \newlength{\WLOGarrowwidth}
 \settowidth{\WLOGarrowwidth}{$\stackrel{\text{WLOG}}{\Rightarrow}$}
 \newcommand{\RightarrowAsWideAsWLOGArrow}{\makebox[\WLOGarrowwidth][c]{$\Rightarrow$}}
-\begin{proof}
-    The proof of this theorem consists of two parts. First, we show that for any graph $G$, $\wledge\iter{t}(G) \preceq \lwl\iter{t}(G)$ for all $t\in\mbn$. Second, we show that there exist graphs $G_1$ and $G_2$ that are distinguishable by $\wledge$ but not by the $\lwl$.
 
-    For the first part, we prove the following by induction on $t$. For any graph $G$ and $t\in\mbn$:
+
+\begin{theorem} \label{thm:wledge-equal-to-wl}
+    The $\wledge$-test is equally expressive as the standard WL-test.
+\end{theorem}
+
+
+
+\section{Experiments}
+
+
+
+\section{Outlook and Conclusion}
+
+% Extend to edge-attributed graphs
+% Extend to directed graphs
+% Extend to higher-order lemmas
+% Extend to knowledge graphs
+
+
+
+\appendix
+\section{Proof of Theorem \ref{thm:lwl-less-than-wledge}}   \label{app:proof-lwl-less-than-wledge}
+
+The proof of this theorem consists of two parts. In Lemma \ref{lemma:lwl-less-than-wledge} we show that $\lwl$ is less expressive than $\wledge$, and in Lemma \ref{lemma:lwl-strictly-less-than-wledge} we show that this difference is strict.
+
+\begin{lemma}   \label{lemma:lwl-less-than-wledge}
+    The $\lwl$-test is less expressive than the $\wledge$-test.
+\end{lemma}
+
+\begin{proof}
+    First, we prove the following by induction on $t$. For any graph $G$ and $t\in\mbn$:
     \begin{equation}    \label{eq:wledge-refinement-of-lwl-induction-hypothesis}
         \wledge\iter{t}(G) \preceq \lwl\iter{t}(G)
     \end{equation}
-    Fix the graph $G$ and shorten the notation $\wl\iter{t} \coloneq \wl\iter{t}(G)$ for clarity (and analogous for $\lwl$ and $\wledge$). The base case $t=0$ is trivially true, because the initial edge colourings of $\wledge$ are the same as those of $\lwl$. For the induction step, assume (\ref{eq:wledge-refinement-of-lwl-induction-hypothesis}) holds for $t$. Then take any $uv, xy \in V(L(G))$ for which $\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)$. Due to the injectivity of $\hash$ and the decoders $\dec$, the following implications hold:
+    Fix the graph $G$ and shorten the notation $\wl\iter{t} \coloneq \wl\iter{t}(G)$ for clarity (and analogous for $\lwl$ and $\wledge$). The base case $t=0$ is trivially true, because the initial edge colourings of $\wledge$ and $\lwl$ are the same. For the induction step, assume (\ref{eq:wledge-refinement-of-lwl-induction-hypothesis}) holds for $t$. Then take any $uv, xy \in L(G)$ for which $\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)$. Due to the injectivity of $\hash$ and the decoders $\dec$, the following implications hold:
     \begin{equation}
         \begin{split}
             &\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)
@@ -319,22 +347,27 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
             \lwl\iter{t+1}(uv) = \lwl\iter{t+1}(xy)
         \end{split}
     \end{equation}
-    Because this holds for all $uv,xy\in V(L(G))$, we have shown that $\wledge\iter{t+1}(G) \preceq \lwl\iter{t+1}(G)$, which concludes the induction step.
+    We have shown that $\wledge\iter{t+1}(G) \preceq \lwl\iter{t+1}(G)$, which concludes the induction step.
     Because both $\lwl$ and $\wl$ are union-preserving, it follows from Lemma \ref{lemma:refinement-distinguishability} that $\lwl$ is less expressive than $\wledge$.
-    
+\end{proof}
+
+
+\begin{lemma}   \label{lemma:lwl-strictly-less-than-wledge}
+    There exist graphs $G_1$ and $G_2$ that are distinguishable by $\wledge$ but not by $\lwl$.
+\end{lemma}
+
+\begin{proof}
     \begin{figure}[ht]
         \centering
-        \begin{subfigure}[b]{0.3\textwidth}
+        \begin{subfigure}[b]{0.25\textwidth}
             \includegraphics[width=\textwidth]{figures/lwl vs wl-ed/G1.png}
             \caption{$G_1$}
         \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.3\textwidth}
+        \begin{subfigure}[b]{0.25\textwidth}
             \includegraphics[width=\textwidth]{figures/lwl vs wl-ed/G2.png}
             \caption{$G_2$}
         \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.3\textwidth}
+        \begin{subfigure}[b]{0.25\textwidth}
             \includegraphics[width=\textwidth]{figures/lwl vs wl-ed/L(G1)-L(G2).png}
             \caption{$L(G_1)=L(G_2)$}
         \end{subfigure}
@@ -342,77 +375,38 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
         \label{fig:lwl-wledge-counterexample}
     \end{figure}
 
-    For the second part, consider the graphs $G_1$ and $G_2$ depicted in Figure \ref{fig:lwl-wledge-counterexample}.
+    Consider the graphs $G_1$ and $G_2$ depicted in Figure \ref{fig:lwl-wledge-counterexample}.
     $\wledge$ can distinguish between these graphs. To see this, note that the colour $\wl\iter{1}(G_2)(e)$ does not occur anywhere in $\wl\iter{1}(G_1)$, so clearly $\wledge\iter{1}(G_2)(de) \notin \set{\wledge\iter{1}(G_1)(uv) \mid uv\in V(L(G_1))}$.
     In contast, $\lwl$ can never distinguish between $G_1$ and $G_2$, as their line graphs are identical. We conclude that $\lwl$ is strictly less expressive than $\wledge$.
 \end{proof}
 
 
-\begin{theorem} \label{thm:wledge-equal-to-wl}
-    The $\wledge$-test is equally expressive as the standard WL-test.
-\end{theorem}
+\section{Proof of Theorem \ref{thm:wledge-equal-to-wl}}   \label{app:proof-wledge-equal-to-wl}
 
+% TODO: say something about injectivity, inverses and the computability thereof
+
+
+\begin{lemma}   \label{lemma:wl-determines-wledge}
+    For any graph $G$, $\multiset{\wl\iter{t+1}(u) \mid u\in G}$ uniquely determines $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G)}$.
+\end{lemma}
 \begin{proof}
-    The proof of this theorem proceeds in two steps. First, we show that $\wledge$ is at most as expressive as $\wl$ and afterwards we show the reversed statement.
-
-    Suppose that $\wl$ cannot distinguish between $G_1$ and $G_2$, i.e. $\multiset{\wl\iter{t+1}(u) \mid u\in G_1} = \multiset{\wl\iter{t+1}(u) \mid u\in G_2}$ for each $t$.
-    We will show that $\multiset{\wl\iter{t+1}(u) \mid u\in G_i}$ uniquely determines $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_i)}$, from which follows that $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)} = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}$ and hence that $\wledge$ cannot distinguish between $G_1$ and $G_2$ either.
-    
     Due to the injectivity of $\hash$,
-    $\multiset{\wl\iter{t+1}(u) \mid u\in G_i}$
+    $\multiset{\wl\iter{t+1}(u) \mid u\in G}$
     uniquely determines
     $\multiset{\left(
         \wl\iter{t}(u),
         \multiset{\wl\iter{t}(v) \mid v\in \nbh(u)}
-    \right) \mid u\in G_i}$.
+    \right) \mid u\in G}$.
 
-    By iterating over $u\in V(G_i), v\in\nbh(u)$ and collecting the sets $\set{\wl\iter{t}(u), \wl\iter{t}(v)}$, one uniquely obtains $\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid u\in G_i, v\in\nbh(u)}$.
-    On the other hand, note that the previous iteration goes over every edge exactly twice. Undoubling the elements yields $\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G_i)}$, which in turn uniquely determines $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_i)}$.
+    By iterating over $u\in V(G), v\in\nbh(u)$ and collecting the sets $\set{\wl\iter{t}(u), \wl\iter{t}(v)}$, one uniquely obtains $\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid u\in G, v\in\nbh(u)}$.
+    On the other hand, note that the previous iteration goes over every edge exactly twice. Undoubling the elements yields $\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G)}$, which in turn uniquely determines $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G)}$.
 
-    We have shown that $\multiset{\wl\iter{t+1}(u) \mid u\in G_i}$ uniquely determines $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_i)}$. If we know the inverses of $\hash$ and $\dec$ on their codomain, this multiset can even be computed. Combined with the fact $\multiset{\wl\iter{t+1}(u) \mid u\in G_1} = \multiset{\wl\iter{t+1}(u) \mid u\in G_2}$, this implies that $\wledge$ cannot distinguish between $G_1$ and $G_2$ either. We conclude that $\wledge$ is at most as expressive as $\wl$.
+\end{proof}
 
-
-    % \begin{equation}
-    %     \begin{split}
-    %         &\multiset{\wl\iter{t+1}(u) \mid u\in G_1} = \multiset{\wl\iter{t+1}(u) \mid u\in G_2}
-    %         \\
-    %         &\Rightarrow
-    %         \begin{split}
-    %             \multiset{\left(
-    %                 \wl\iter{t}(u),
-    %                 \multiset{\wl\iter{t}(v) \mid v\in \nbh(u)}
-    %             \right)}_{u\in G_1}
-    %             =
-    %             \multiset{\left(
-    %                 \wl\iter{t}(u),
-    %                 \multiset{\wl\iter{t}(v) \mid v\in \nbh(u)}
-    %             \right)}_{u\in G_2}
-    %         \end{split}
-    %     \end{split}
-    % \end{equation}
-    % When iterating over all pairs $(u,v)$ with $u\in V(G_i), v\in\nbh(u)$ and collecting the sets $\set{\wl\iter{t}(u), \wl\iter{t}(v)}$ in a multiset, the previous equation implies that the result will be the same for $i\in\set{1,2}$:
-    % \begin{equation}
-    %     \multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid u\in V(G_1), v\in \nbh(u)} = \multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid u\in V(G_2), v\in \nbh(u)}
-    % \end{equation}
-    % On the other hand, note that the previously described iteration goes over every edge $(u,v)\in E(G_i)$ exactly twice, so the multisets in the previous equation contain $\set{\wl\iter{t}(u), \wl\iter{t}(v)}$ twice for each edge $(u,v)\in E(G_i)$. Undoubling the elements yields:
-    % \begin{equation}
-    %     \begin{split}
-    %         &\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G_1)}
-    %         =
-    %         \multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G_2)}
-    %         \\
-    %         &\Rightarrow
-    %         \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)}
-    %         =
-    %         \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}
-    %     \end{split}
-    % \end{equation}
-    % From which follows that $\wledge$ cannot distinguish $G_1$ and $G_2$ either. We conclude that $\wledge$ is at most as expressive as $\wl$.
-
-
-    For the second part of the proof, suppose that $\wledge$ cannot distinguish between $G_1$ and $G_2$, i.e. $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)} = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}$ for all iterations $t$. Take any $t>0$.
-    We will show that $\multiset{\wledge\iter{t}(G_i)(uv) \mid uv\in L(G_i)}$ uniquely determines $\multiset{\wl\iter{t}(u) \mid u\in G_i}$, from which follows that $\multiset{\wl\iter{t}(u) \mid u\in G_1} = \multiset{\wl\iter{t}(u) \mid u\in G_2}$ and hence that $\wl$ cannot distinguish between $G_1$ and $G_2$ either.
-    
+\begin{lemma}   \label{lemma:wledge-determines-wl}
+    $\multiset{\wledge\iter{t}(G_i)(uv) \mid uv\in L(G_i)}$ uniquely determines $\multiset{\wl\iter{t}(u) \mid u\in G_i}$
+\end{lemma}
+\begin{proof}
     Due to the injectivity of $\dec$,
     $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_i)}$
     uniquely determines
@@ -421,22 +415,62 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
     When `unrolling' this multiset -- i.e. creating a multiset that contains both $x$ and $y$ for each $\set{x,y}$ in the original multiset -- we deterministically obtain the multiset that contains $\wl\iter{t}(u)$ exactly $\deg(u)$ times for each $u\in V(G_i)$.
 
     By the injectivity of $\hash$ and the fact $t>0$, $\wl\iter{t}(u)$ uniquely determines $\deg(u) = \lvert\multiset{\wl\iter{t-1}(v) \mid v\in \nbh(u)}\rvert$ for each $u\in V(G_i)$. So, if we divide the number of occurences of $\wl\iter{t}(u)$ in the unrolled multiset by $\deg(u)$ for each $u$, we deterministically obtain $\multiset{\wl\iter{t}(u) \mid u\in V(G_i)}$.
-
-    We have shown that $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_i)}$ uniquely determines $\multiset{\wl\iter{t}(u) \mid u\in G_i}$. If we know the inverses of $\hash$ and $\dec$ on their codomain, this multiset can even be computed. Combined with the fact $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)} = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}$, this implies that $\wl$ cannot distinguish between $G_1$ and $G_2$ either. We conclude that $\wledge$ is at least as expressive as $\wl$.
 \end{proof}
 
 
+\begingroup
+\def\thetheorem{\ref{thm:wledge-equal-to-wl}}
+\begin{theorem}[restated]
+    The $\wledge$-test is equally expressive as the standard WL-test.
+\end{theorem}
+\addtocounter{theorem}{-1}
+\endgroup
 
-\section{Experiments}
+\begin{proof}
+    Suppose that $\wl$ cannot distinguish between $G_1$ and $G_2$, which implies $\multiset{\wl\iter{t+1}(u) \mid u\in G_1} = \multiset{\wl\iter{t+1}(u) \mid u\in G_2}$ for each $t$.
+    Then it follows from lemma \ref{lemma:wl-determines-wledge} that $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1) = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}}$ as well, and hence that $\wledge$ cannot distinguish between $G_1$ and $G_2$ either.
+
+    Similarly, suppose that $\wledge$ cannot distinguish between $G_1$ and $G_2$, which implies $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)} = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}$ for each $t>0$.
+    Then it follows from lemma \ref{lemma:wledge-determines-wl} that $\multiset{\wl\iter{t}(u) \mid u\in G_1} = \multiset{\wl\iter{t}(u) \mid u\in G_2}$ as well for each $t>0$, and hence that $\wl$ cannot distinguish between $G_1$ and $G_2$ either.
+\end{proof}
 
 
-
-\section{Outlook and Conclusion}
-
-% Extend to edge-attributed graphs
-% Extend to directed graphs
-% Extend to higher-order lemmas
-% Extend to knowledge graphs
+% \begin{equation}
+%     \begin{split}
+%         &\multiset{\wl\iter{t+1}(u) \mid u\in G_1} = \multiset{\wl\iter{t+1}(u) \mid u\in G_2}
+%         \\
+%         &\Rightarrow
+%         \begin{split}
+%             \multiset{\left(
+%                 \wl\iter{t}(u),
+%                 \multiset{\wl\iter{t}(v) \mid v\in \nbh(u)}
+%             \right)}_{u\in G_1}
+%             =
+%             \multiset{\left(
+%                 \wl\iter{t}(u),
+%                 \multiset{\wl\iter{t}(v) \mid v\in \nbh(u)}
+%             \right)}_{u\in G_2}
+%         \end{split}
+%     \end{split}
+% \end{equation}
+% When iterating over all pairs $(u,v)$ with $u\in V(G_i), v\in\nbh(u)$ and collecting the sets $\set{\wl\iter{t}(u), \wl\iter{t}(v)}$ in a multiset, the previous equation implies that the result will be the same for $i\in\set{1,2}$:
+% \begin{equation}
+%     \multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid u\in V(G_1), v\in \nbh(u)} = \multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid u\in V(G_2), v\in \nbh(u)}
+% \end{equation}
+% On the other hand, note that the previously described iteration goes over every edge $(u,v)\in E(G_i)$ exactly twice, so the multisets in the previous equation contain $\set{\wl\iter{t}(u), \wl\iter{t}(v)}$ twice for each edge $(u,v)\in E(G_i)$. Undoubling the elements yields:
+% \begin{equation}
+%     \begin{split}
+%         &\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G_1)}
+%         =
+%         \multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G_2)}
+%         \\
+%         &\Rightarrow
+%         \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)}
+%         =
+%         \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}
+%     \end{split}
+% \end{equation}
+% From which follows that $\wledge$ cannot distinguish $G_1$ and $G_2$ either. We conclude that $\wledge$ is at most as expressive as $\wl$.
 
 
 \bibliographystyle{unsrt}
