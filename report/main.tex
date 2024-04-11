@@ -148,7 +148,7 @@ The most commonly used class of GNNs are message passing neural networks (MPNNs)
 % state both graph/node distinguishability and function approximation as ways to characterize expressiveness
 The expressive power of a parametrized model refers to the range of functions and patterns that it can represent. 
 % TODO: something about general neural networks?
-In the context of graph neural networks, there are various ways to characterize expressiveness. The most common one is the ability to distinguish non-isomorphic graphs, but the to function approximation \cite{maron2019universality}, substructure counting \cite{chen2020can}, spectral decomposition \cite{balcilar2020analyzing} and logical representation \cite{barcelo2020logical} are other viable criterions. Interestingly, \cite{chen2019equivalence} showed a theoretical equivalence between the expressiveness in terms of graph distinguishability and function approximation on graphs.
+In the context of graph neural networks, there are various ways to characterize expressiveness. The most common one is the ability to distinguish non-isomorphic graphs, but function approximation \cite{maron2019universality}, substructure counting \cite{chen2020can}, spectral decomposition \cite{balcilar2020analyzing} and logical representation \cite{barcelo2020logical} are other viable criterions. Interestingly, \cite{chen2019equivalence} showed a theoretical equivalence between the expressiveness in terms of graph distinguishability and function approximation on graphs.
 
 In this work, we mainly focus on expressiveness in terms of distinguishing non-isomorphic graphs.
 The usual way to quantify this expressiveness is through a comparison with various forms of the Weisfeiler-Leman (WL) test \cite{weisfeiler1968reduction}. Importantly, MPNNs are known to be at most as expressive as the standard WL-test \cite{morris2019weisfeiler}, while \cite{xu2018powerful} constructed a class of GNNs that is equally expressive as WL. Other works have introduced other variations of the WL-test, such as the $k$-WL hierarchy \cite{morris2019weisfeiler} and the Relational Asymmetric Local 2-WL \cite{huang2024theory}.
@@ -157,11 +157,11 @@ Our work aligns with this line of research by introducing two new variations of 
 
 
 \paragraph{Line Graph Neural Networks}
-Most methods that use line graphs in graph machine learning do so in combination with the original graph \cite{choudhary2021atomistic,chen2017supervised,jiang2019censnet,zhang2023line}. For example, \cite{zhang2023line} runs GNNs on the original graph and the line graph in parallel, and then maximizes the mutual information between the two outputs.
-Further, it should be noted that most methods that compute edge attributes, e.g. 
-Generalized Message Passing \cite{battaglia2018relational}, could also be regarded as operating on the line graph.
+Most methods that use line graphs in graph machine learning do so in combination with the original graph \cite{choudhary2021atomistic,chen2017supervised,jiang2019censnet,zhang2023line}. For instance, \cite{zhang2023line} runs GNNs on the original graph and the line graph in parallel, and then maximizes the mutual information between the two outputs.
+Further, various methods operate on the line graph implicitly by computing edge attributes, 
+Generalized Message Passing \cite{battaglia2018relational} is an example of this.
 A few approaches have also been proposed that operate only on the line graph, such as LGLP \cite{cai2021line} and INDIGO \cite{liu2021indigo}.
-We limit the scope of this study to these approaches, as their analysis will also be of benefit to the compound methods. To the best of our knowledge, no work has yet been done on the theoretical analysis of these models.
+We limit the scope of this study to these approaches, as their analysis will also offer insights into the compound methods. To the best of our knowledge, there has been no theoretical exploration of these models to date.
 
 
 
