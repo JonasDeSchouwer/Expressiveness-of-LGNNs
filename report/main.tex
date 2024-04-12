@@ -122,7 +122,7 @@ Recently, several works have investigated the use of line graphs in graph machin
 % Expressive power
 The theoretical understanding of these models, however, is still in its infancy.
 % State research question
-In this work we therefore aim to characterize the expressive power of graph neural networks operating on line graphs. We will specifically focus on message-passing neural networks operating on line graphs, henceforth called Line Graph MPNNs (LG-MPNNs).
+Therefore, we aim in this work to characterize the expressive power of graph neural networks operating on line graphs. Studying the expressiveness like this can improve our understanding of the strenghts and limitations of the model, thus paving the way for improvements and guiding model selection for specific tasks. We will specifically focus on message-passing neural networks operating on line graphs, henceforth called Line Graph MPNNs (LG-MPNNs).
 
 % Summarize contributions
 Our contributions can be summarized as follows:
@@ -150,8 +150,8 @@ The expressive power of a parametrized model refers to the range of functions an
 % TODO: something about general neural networks?
 In the context of graph neural networks, there are various ways to characterize expressiveness. The most common one is the ability to distinguish non-isomorphic graphs, but function approximation \cite{maron2019universality}, substructure counting \cite{chen2020can}, spectral decomposition \cite{balcilar2020analyzing} and logical representation \cite{barcelo2020logical} are other viable criterions. Interestingly, \cite{chen2019equivalence} showed a theoretical equivalence between the expressiveness in terms of graph distinguishability and function approximation on graphs.
 
-In this work, we mainly focus on expressiveness in terms of distinguishing non-isomorphic graphs.
-The usual way to quantify this expressiveness is through a comparison with various forms of the Weisfeiler-Leman (WL) test \cite{weisfeiler1968reduction}. Importantly, MPNNs are known to be at most as expressive as the standard WL-test \cite{morris2019weisfeiler}, while \cite{xu2018powerful} constructed a class of GNNs that is equally expressive as WL. Other works have introduced other variations of the WL-test, such as the $k$-WL hierarchy \cite{morris2019weisfeiler} and the Relational Asymmetric Local 2-WL \cite{huang2024theory}.
+In this work, we focus on expressiveness in terms of distinguishing non-isomorphic graphs.
+The usual way to quantify this expressiveness is through a comparison with various forms of the Weisfeiler-Leman (WL) test \cite{weisfeiler1968reduction}. Importantly, MPNNs are known to be at most as expressive as WL \cite{morris2019weisfeiler}, while \cite{xu2018powerful} constructed a class of GNNs that is equally expressive as WL. Other works have introduced other variations of the WL-test, such as the $k$-WL hierarchy \cite{morris2019weisfeiler} and the Relational Asymmetric Local 2-WL \cite{huang2024theory}.
 Our work aligns with this line of research by introducing two new variations of the WL-test tailored to edge colourings, by characterizing the expressive power of LG-MPNNs in terms of these tests, and by placing these tests in the $k$-WL hierarchy.
 
 
@@ -179,7 +179,7 @@ The \emph{line graph} $L(G)$ of $G$ is a graph whose nodes correspond to the edg
 
 \paragraph{Message Passing Neural Networks}
 % Framework with update/aggregate functions
-A Message Passing Neural Network (MPNN) \cite{gilmer2017neural} is a framework for learning on graph-structured data that works by iteratively aggregating and updating node features. The feature of node $u$ in iteration $t$ is denoted as $\feat_u\iter{t}$. It starts with $\feat_u\iter{0} = c(u)$ and then iteratively updates the features of all nodes $u\in G$ as follows:
+A Message Passing Neural Network (MPNN) \cite{gilmer2017neural} is a framework for learning on graph-structured data that works by iteratively aggregating and updating node features. The feature of node $u$ in iteration $t$ is denoted by $\feat_u\iter{t}$. It starts with $\feat_u\iter{0} = c(u)$ and then iteratively updates the features of all nodes $u\in G$ as follows:
 \begin{equation}
     \feat_u\iter{t+1}
     = \upd\left(\feat_u\iter{t},
@@ -188,7 +188,7 @@ A Message Passing Neural Network (MPNN) \cite{gilmer2017neural} is a framework f
 
 \paragraph{Refinements and graph distinguishability}
 A function $k(G): V(G) \rightarrow \mcc$ \emph{refines} a function $l(G): V(G) \rightarrow \mcc$, denoted $k(G) \preceq l(G)$, if $k(G)(u) = k(G)(v)$ implies $l(G)(u) = l(G)(v)$ for all $u,v\in V(G)$. We call such functions \emph{equivalent}, denoted $k(G) \equiv l(G)$, if they refine each other.
-We say that an algorithm $\mca$ that generates node features on graphs \emph{distinguishes} $G_1$ and $G_2$ if $\multiset{\mca(G_1)(u) \mid u\in V(G_1)} \neq \multiset{\mca(G_2)(u) \mid u\in V(G_2)}$.
+We say that an algorithm $\mca$ that generates node features on graphs \emph{distinguishes} $G_1$ and $G_2$ if $\multiset{\mca(G_1)(u) \mid u\in V(G_1)} \neq \multiset{\mca(G_2)(u) \mid u\in V(G_2)}$. We will often write $\mca(u)$ as a shorthand for $\mca(G)(u)$ when it is clear which graph $u$ belongs to.
 
 
 
@@ -207,7 +207,7 @@ We say that an algorithm $\mca$ that generates node features on graphs \emph{dis
 % prove that wl is equally powerful as wledge
 % connection to k-wl
 
-In this section we study the expressive power of \emph{Line Graph MPNNs} (LG-MPNNs), which we define as MPNNs (outlined in Section \ref{sec:background}) applied to the line graph of a graph $G$.
+In this section we study the expressive power of \emph{Line Graph MPNNs} (LG-MPNNs), which we define as MPNNs (outlined in Section \ref{sec:background}) applied to the line graph of an input graph.
 The Line GNNs proposed in \cite{cai2021line} fall under this framework.
 We quantify their ability to distinguish non-isomorphic graphs by comparing them to variations of the WL-test.
 Because LG-MPNNs compute edge features of the original graph rather than node features, however, we devise two new variations of the standard WL-test that are also tailored to computing edge colourings. 
@@ -244,7 +244,7 @@ This decoder need not be the same as the one used in $\lwl$, but we overloaded t
 Concretely, it applies the WL-algorithm to the original (coloured) graph $G$, computing a node colouring $\wl\iter{t}(G): V(G) \rightarrow \mcc$ at each iteration $t$. Then the edge colouring at iteration $t$ is computed as $\wledge\iter{t}(G)(uv) = \dec(\set{\wl\iter{t}(G)(u),\wl\iter{t}(G)(v)})$.
 
 
-In what follows, we will first prove that LG-MPNNs are at most as expressive as the $\lwl$-test (Theorem \ref{thm:lg-mpnn-less-than-lwl}) and that there exist an LG-MPNN that is equally expressive as $\lwl$ (Theorem \ref{thm:lg-mpnn-equal-to-lwl}).
+In what follows, we will first prove that LG-MPNNs are at most as expressive as the $\lwl$-test (Theorem \ref{thm:lg-mpnn-less-than-lwl}) and that there exists an LG-MPNN that is equally expressive as $\lwl$ (Theorem \ref{thm:lg-mpnn-equal-to-lwl}).
 Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem \ref{thm:lwl-less-than-wledge}) and that $\wledge$ is equally expressive as the standard WL-test (Theorem \ref{thm:wledge-equal-to-wl}). Theorems \ref{thm:lwl-less-than-wledge} and \ref{thm:wledge-equal-to-wl} are proven in the Appendices.
 
 \begin{theorem} \label{thm:lg-mpnn-less-than-lwl}
@@ -265,10 +265,10 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
 \end{proof}
 
 \begin{theorem} \label{thm:lg-mpnn-equal-to-lwl}
-    There exists an LG-MPNNs that is equally expressive as the $\lwl$-test.
+    There exists an LG-MPNN that is equally expressive as the $\lwl$-test.
 \end{theorem}
 \begin{proof}
-    Consider any finite set of graphs $\set{G_1, \dots, G_N}$ that are pairwise distinguishable by the LWL-test. This is equivalent to saying that $\set{L(G_1), \dots, L(G_N)}$ is pairwise distinguishable by the WL-test. \cite{xu2018powerful} showed that this implies the existence of an MPNN that can distinguish between the line graphs, i.e. the existence of an LG-MPNN that can distinguish between the original set $\set{G_1, \dots, G_N}$.
+    Consider any finite set of graphs $\set{G_1, \dots, G_N}$ that are pairwise distinguishable by the $\lwl$-test. This is equivalent to saying that $\set{L(G_1), \dots, L(G_N)}$ are pairwise distinguishable by the $\wl$-test. \cite{xu2018powerful} showed that this implies the existence of an MPNN that can distinguish the line graphs, thus the existence of an LG-MPNN that can distinguish the original set $\set{G_1, \dots, G_N}$.
 \end{proof}
 
 \begin{theorem} \label{thm:lwl-less-than-wledge}
@@ -385,7 +385,7 @@ The proof of this theorem consists of two parts. In Lemma \ref{lemma:lwl-less-th
 
 % TODO: say something about injectivity, inverses and the computability thereof
 
-First, we show that the multiset of node labels generated by $\wl$ uniquely determines the multiset of line graph node labels generated by $\wledge$ (Lemma \ref{lemma:wl-determines-wledge}) and vice versa (\ref{lemma:wledge-determines-wl}). Afterwards, we show how this implies Theorem \ref{thm:wledge-equal-to-wl}. Our proofs build on the injectivity of $\hash$ and $\dec$. They are not constructive, but can be made so if the inverses of $\hash$ and $\dec$ on their codomains are known.
+First, we show that the multiset of node labels generated by $\wl$ uniquely determines the multiset of line graph node labels generated by $\wledge$ (Lemma \ref{lemma:wl-determines-wledge}) and vice versa (\ref{lemma:wledge-determines-wl}). Afterwards, we show how this implies Theorem \ref{thm:wledge-equal-to-wl}. Our proofs build on the injectivity of $\hash$ and $\dec$. The proofs are not constructive, but can be made so if the inverses of $\hash$ and $\dec$ on their codomains are known.
 
 \begin{lemma}   \label{lemma:wl-determines-wledge}
     For any graph $G$, $\multiset{\wl\iter{t+1}(u) \mid u\in G}$ uniquely determines $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G)}$.
@@ -405,17 +405,17 @@ First, we show that the multiset of node labels generated by $\wl$ uniquely dete
 \end{proof}
 
 \begin{lemma}   \label{lemma:wledge-determines-wl}
-    $\multiset{\wledge\iter{t}(G_i)(uv) \mid uv\in L(G_i)}$ uniquely determines $\multiset{\wl\iter{t}(u) \mid u\in G_i}$
+    For any graph $G$, $\multiset{\wledge\iter{t}(G)(uv) \mid uv\in L(G)}$ uniquely determines $\multiset{\wl\iter{t}(u) \mid u\in G}$.
 \end{lemma}
 \begin{proof}
     Due to the injectivity of $\dec$,
-    $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_i)}$
+    $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G)}$
     uniquely determines
-    $\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G_i)}$.
+    $\multiset{\set{\wl\iter{t}(u), \wl\iter{t}(v)} \mid (u,v)\in E(G)}$.
 
-    When `unrolling' this multiset -- i.e. creating a multiset that contains both $x$ and $y$ for each $\set{x,y}$ in the original multiset -- we deterministically obtain the multiset that contains $\wl\iter{t}(u)$ exactly $\deg(u)$ times for each $u\in V(G_i)$.
+    When `unrolling' this multiset -- i.e. creating a multiset that contains both $x$ and $y$ for each $\set{x,y}$ in the original multiset -- we deterministically obtain the multiset that contains $\wl\iter{t}(u)$ exactly $\deg(u)$ times for each $u\in G$.
 
-    By the injectivity of $\hash$ and the fact $t>0$, $\wl\iter{t}(u)$ uniquely determines $\deg(u) = \lvert\multiset{\wl\iter{t-1}(v) \mid v\in \nbh(u)}\rvert$ for each $u\in V(G_i)$. So, if we divide the number of occurences of $\wl\iter{t}(u)$ in the unrolled multiset by $\deg(u)$ for each $u$, we deterministically obtain $\multiset{\wl\iter{t}(u) \mid u\in V(G_i)}$.
+    By the injectivity of $\hash$ and $t>0$, $\wl\iter{t}(u)$ uniquely determines $\deg(u) = \left\lvert\multiset{\wl\iter{t-1}(v) \mid v\in \nbh(u)}\right\rvert$ for each $u\in G$. So, if we divide the number of occurences of $\wl\iter{t}(u)$ in the unrolled multiset by $\deg(u)$ for each $u$, we deterministically obtain $\multiset{\wl\iter{t}(u) \mid u\in G}$.
 \end{proof}
 
 
@@ -429,10 +429,10 @@ First, we show that the multiset of node labels generated by $\wl$ uniquely dete
 
 \begin{proof}
     Suppose that $\wl$ cannot distinguish between $G_1$ and $G_2$, which implies $\multiset{\wl\iter{t+1}(u) \mid u\in G_1} = \multiset{\wl\iter{t+1}(u) \mid u\in G_2}$ for each $t$.
-    Then it follows from lemma \ref{lemma:wl-determines-wledge} that $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1) = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}}$ as well, and hence that $\wledge$ cannot distinguish between $G_1$ and $G_2$ either.
+    Then it follows from Lemma \ref{lemma:wl-determines-wledge} that $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)} = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}$ as well, and hence that $\wledge$ cannot distinguish between $G_1$ and $G_2$ either.
 
     Similarly, suppose that $\wledge$ cannot distinguish between $G_1$ and $G_2$, which implies $\multiset{\wledge\iter{t}(uv) \mid uv\in L(G_1)} = \multiset{\wledge\iter{t}(uv) \mid uv\in L(G_2)}$ for each $t>0$.
-    Then it follows from lemma \ref{lemma:wledge-determines-wl} that $\multiset{\wl\iter{t}(u) \mid u\in G_1} = \multiset{\wl\iter{t}(u) \mid u\in G_2}$ as well for each $t>0$, and hence that $\wl$ cannot distinguish between $G_1$ and $G_2$ either.
+    Then it follows from Lemma \ref{lemma:wledge-determines-wl} that $\multiset{\wl\iter{t}(u) \mid u\in G_1} = \multiset{\wl\iter{t}(u) \mid u\in G_2}$ as well for each $t>0$, and hence that $\wl$ cannot distinguish between $G_1$ and $G_2$ either.
 \end{proof}
 
 
