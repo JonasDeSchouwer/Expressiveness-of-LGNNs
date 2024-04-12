@@ -143,7 +143,7 @@ def sample_neg(edge_index, node_feat, num_samples, h):
 
 
 if __name__ == "__main__":
-    dataloaderEN = tg.datasets.Twitch(root='code/data', name="EN")
-    dataset = generate_dataset(dataloaderEN)
-    dataset.save('code/data/TwitchENDataset')
+    dataloader = tg.datasets.HeterophilousGraphDataset(root='code/data', name="Minesweeper")
+    dataset = generate_dataset(dataloader)
+    dataset.save('code/data/MinesweeperDataset')
     print("dataset saved")

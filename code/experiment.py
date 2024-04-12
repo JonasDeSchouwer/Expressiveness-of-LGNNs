@@ -19,14 +19,32 @@ class Configs:
     """
     input_dim = 130 # 128 features from the Twitch dataset + 2 encoding the distance to the target nodes
     hidden_dim = 20      # chosen to limit expressivity
-    epochs = 500
+    epochs = 80            # enough based on experiments
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     optimizer = 'Adam'      # like in LGLP
     learning_rate = 5e-3    # like in LGLP
     batch_size = 50         # like in LGLP
 
 
-def evaluate(model: nn.Module, set: List[Graph], loss_func=None):
+def evaluate(outputs: torch.Tensor, targets: torch.Tensor, threshold: float=0.5):
+    """
+    Computes the accuracy with the given threshold
+    """
+    predictions = torch.where(outputs > threshold, 1, 0)
+    tp = (predictions * targets).sum().item()
+    tn = ((1 - predictions) * (1 - targets)).sum().item()
+    fp = (predictions * (1 - targets)).sum().item()
+    fn = ((1 - predictions) * targets).sum().item()
+    return {
+        "tp": tp,
+        "tn": tn,
+        "fp": fp,
+        "fn": fn,
+        "acc": (tp + tn) / len(outputs),
+    }
+
+
+def evaluate(model: nn.Module, set: List[Graph], loss_func=None, eval_auc=False):
     """
     Returns a dict with keys "loss" and "acc" for the given model and dataset.
     """
@@ -34,19 +52,30 @@ def evaluate(model: nn.Module, set: List[Graph], loss_func=None):
     model.eval()
 
     loss = 0
-    n_accurate = 0
-    for graph in set:
-
+    outputs = torch.zeros(len(set), dtype=torch.float, device=model.device)
+    targets = torch.zeros(len(set), dtype=torch.float, device=model.device)
+    for i, graph in enumerate(set):
         output = model(graph.node_feat, graph.edge_index, graph.line_edge_index, graph.index01)
+        outputs[i] = output
+        targets[i] = graph.targets.to(torch.float)
         if loss_func is not None:
             loss += loss_func(output, graph.targets.to(torch.float)).item()
 
-        prediction = torch.where(output > 0.5, 1, 0)
-        n_accurate += 1 if (prediction == graph.targets).item() else 0
+    auc = None
+    tps = []
+    fps = []
+    n_samples = 50
+    if eval_auc:
+        for threshold in torch.linspace(0, 1, n_samples):
+            eval = evaluate(outputs, targets, threshold=threshold)
+            tps.append(eval["tp"])
+            fps.append(eval["fp"])
+        auc = torch.trapz(torch.tensor(tps), torch.tensor(fps))
 
     return {
         "loss": loss,
-        "acc": n_accurate/len(set)
+        "acc": evaluate(outputs, targets)["acc"],
+        "auc": auc,
     }
 
 def train(model: nn.Module, dataset: Dataset, conf: Configs, run_name=None):
@@ -82,12 +111,14 @@ def train(model: nn.Module, dataset: Dataset, conf: Configs, run_name=None):
 
         # Log metrics
         model.eval()
-        train_eval = evaluate(model, dataset.train_graphs, loss_func=loss_func)
-        test_eval = evaluate(model, dataset.test_graphs, loss_func=loss_func)
+        train_eval = evaluate(model, dataset.train_graphs, loss_func=loss_func, eval_auc=True)
+        test_eval = evaluate(model, dataset.test_graphs, loss_func=loss_func, eval_auc=True)
         writer.add_scalar('Loss/train', train_eval["loss"], epoch)
         writer.add_scalar('Loss/test', test_eval["loss"], epoch)
         writer.add_scalar('Accuracy/train', train_eval["acc"], epoch)
         writer.add_scalar('Accuracy/test', test_eval["acc"], epoch)
+        writer.add_scalar('AUC/train', train_eval["auc"], epoch)
+        writer.add_scalar('AUC/test', test_eval["auc"], epoch)
         
         if epoch % math.ceil(conf.epochs/100) == 0:
             print (f"epoch {epoch}: {train_eval['loss']}")
@@ -105,10 +136,17 @@ def main():
 
     # Load dataset
     dataset = Dataset("code/data/TwitchENDataset")
+    dataset_name = "TwitchEN"
     dataset.to(conf.device)
 
-    train(node_conv_model, dataset, conf, run_name="node_conv")
-    train(edge_conv_model, dataset, conf, run_name="edge_conv")
+    try:
+        train(node_conv_model, dataset, conf, run_name=f"{dataset_name}-node_conv")
+    except Exception as e:
+        print(e)
+    try:
+        train(edge_conv_model, dataset, conf, run_name=f"{dataset_name}-edge_conv")
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
