@@ -44,7 +44,7 @@ class Dataset():
     def save(self, folder):
         with open(f"{folder}/train_graphs.pckl", 'wb') as f:
             pickle.dump(self.train_graphs, f)
-        with open(f"{folder}/test_graphs.pckl", 'wb') as f:
+        with open(f"{folder}/test_graphs.pckl", 'wb+') as f:
             pickle.dump(self.test_graphs, f)
 
     def load(self, folder):
@@ -62,23 +62,22 @@ class Dataset():
             yield [graphs[i] for i in batch]
 
 
-def generate_PPI_dataset(test_ratio=0.1, num_samples_per_graph=200, pos_ratio=0.5, h=2):
-    PPI = tg.datasets.PPI(root='data')
-    num_train = int((1-test_ratio) * len(PPI))
-    num_test = len(PPI) - num_train
-    print(f"dataset contains {len(PPI)} graphs: using {num_train} for training and {num_test} for testing")
+def generate_dataset(dataloader, test_ratio=0.1, num_samples_per_graph=3000, pos_ratio=0.5, h=1):
+    num_train = math.ceil((1-test_ratio) * len(dataloader))
+    num_test = len(dataloader) - num_train
+    print(f"dataset contains {len(dataloader)} graphs: using {num_train} for training and {num_test} for testing")
 
     print("generating training graphs...")
     train_graphs = []
     for i in tqdm(range(num_train)):
-        data = PPI[i]
+        data = dataloader[i]
         train_graphs += sample_pos(data.edge_index, data.x, int(num_samples_per_graph * pos_ratio), h)
         train_graphs += sample_neg(data.edge_index, data.x, int(num_samples_per_graph * (1-pos_ratio)), h)
     
     print("generating test graphs...")
     test_graphs = []
-    for i in tqdm(range(num_train, len(PPI))):
-        data = PPI[i]
+    for i in tqdm(range(num_train, len(dataloader))):
+        data = dataloader[i]
         test_graphs += sample_pos(data.edge_index, data.x, int(num_samples_per_graph * pos_ratio), h)
         test_graphs += sample_neg(data.edge_index, data.x, int(num_samples_per_graph * (1-pos_ratio)), h)
     
@@ -125,7 +124,7 @@ def sample_neg(edge_index, node_feat, num_samples, h):
 
     neg_graphs = []
     for i in tqdm(range(num_samples)):
-        subgraph = subgraph_extraction(list(neg_edges[:, i].flatten()), edge_index, node_feat, h)
+        subgraph = subgraph_extraction(list(neg_edges[i].flatten()), edge_index, node_feat, h)
         line_subgraph_edge_index = to_line_graph(subgraph.edge_index, node_feat.shape[0])
         neg_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([0])))
 
@@ -133,6 +132,7 @@ def sample_neg(edge_index, node_feat, num_samples, h):
 
 
 if __name__ == "__main__":
-    dataset = generate_PPI_dataset()
-    dataset.save('data/PPI')
+    dataloader = tg.datasets.CoraFull(root='data')
+    dataset = generate_dataset(dataloader)
+    dataset.save('code/data/CoraDataset')
     print("dataset saved")

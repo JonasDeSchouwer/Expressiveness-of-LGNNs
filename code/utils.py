@@ -9,7 +9,7 @@ from random import random
 from tqdm import tqdm
 
 
-def subgraph_extraction(link, edge_index, node_feat, h=1, node_information=None):
+def subgraph_extraction(link, edge_index, node_feat, h=1):
     """
     extract the h-hop enclosing subgraph around link `link'
     https://github.com/LeiCaiwsu/LGLP
@@ -53,15 +53,18 @@ def subgraph_extraction(link, edge_index, node_feat, h=1, node_information=None)
     # create and label subgraph
     sub_edge_index, _ = tg.utils.subgraph(nodes, edge_index, relabel_nodes=True)
     sub_node_feat = torch.cat((
-        node_feat[nodes],
+        node_feat[nodes, :],
         torch.tensor(nodes_dist_to_0).view(-1, 1).float(),
         torch.tensor(nodes_dist_to_1).view(-1, 1).float()
     ), dim=1)
 
-    # remove 0-1 and 1-0 edge
-    edge01 = torch.all(sub_edge_index == torch.tensor([[0],[1]]), dim=0)
-    edge10 = torch.all(sub_edge_index == torch.tensor([[1],[0]]), dim=0)
-    sub_edge_index = sub_edge_index[:, ~edge01 & ~edge10]
+    # make sure there is always an edge from node 0 to node 1 in both directions
+    edge01 = torch.any(torch.all(sub_edge_index == torch.tensor([[0],[1]]), dim=0))
+    edge10 = torch.any(torch.all(sub_edge_index == torch.tensor([[1],[0]]), dim=0))
+    if not edge01:
+        sub_edge_index = torch.cat((sub_edge_index, torch.tensor([[0],[1]])), dim=1)
+    if not edge10:
+        sub_edge_index = torch.cat((sub_edge_index, torch.tensor([[1],[0]])), dim=1)
 
     # make sure the first m edges are each unique
     sub_edge_index = sort_for_unique_edges(sub_edge_index)
@@ -100,7 +103,7 @@ def sort_for_unique_edges(edge_index):
 
 def to_line_graph(edge_index, num_nodes):
     """
-    create the line graph of the input graph
+    create the line edge index of the input graph
     """
     unique_edges = edge_index[:, :int(len(edge_index[0]) / 2)]
     assert torch.all(unique_edges[0] < unique_edges[1]), "the graph edges have not been sorted"
@@ -119,7 +122,10 @@ def to_line_graph(edge_index, num_nodes):
         for i in range(len(edges_with_this_node)):
             for j in range(i+1, len(edges_with_this_node)):
                 line_edges.append(torch.tensor([edges_with_this_node[i], edges_with_this_node[j]]))
-    line_edge_index = torch.stack(line_edges, dim=0).t()
+    if len(line_edges) == 0:
+        line_edge_index = torch.zeros((2, 0), dtype=torch.long)
+    else:
+        line_edge_index = torch.stack(line_edges, dim=0).t()
 
     # add the other direction of the edges
     line_edge_index = torch.cat((line_edge_index, line_edge_index[[1,0],:]), dim=1)
@@ -138,3 +144,5 @@ def to_line_graph_features(edge_index, node_feat):
     line_node_feat = torch.cat((node_feat[unique_edges[0]], node_feat[unique_edges[1]]), dim=1)
 
     return line_node_feat
+
+
