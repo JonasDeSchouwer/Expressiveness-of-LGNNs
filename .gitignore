@@ -1,4 +1,9 @@
 report/main.**
 useful papers
+code/__pycache__
+code/data
+code/LGLP
+code/pytorch_DGCNN
+data
 
 !report/main.tex

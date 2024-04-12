@@ -23,12 +23,14 @@ class Graph:
     node_feat: torch.Tensor
     line_edge_index: torch.Tensor
     targets: torch.Tensor
+    index01: int
 
-    def __init__(self, edge_index, node_feat, line_edge_index, targets):
+    def __init__(self, edge_index, node_feat, line_edge_index, targets, index01):
         self.edge_index = edge_index
         self.node_feat = node_feat
         self.line_edge_index = line_edge_index
         self.targets = targets
+        self.index01 = index01
 
 
 class Dataset():
@@ -40,6 +42,13 @@ class Dataset():
         self.test_graphs = None
         if path is not None:
             self.load(path)
+
+    def to(self, device: torch.device):
+        for graph in self.train_graphs + self.test_graphs:
+            graph.edge_index = graph.edge_index.to(device)
+            graph.node_feat = graph.node_feat.to(device)
+            graph.line_edge_index = graph.line_edge_index.to(device)
+            graph.targets = graph.targets.to(device)
     
     def save(self, folder):
         with open(f"{folder}/train_graphs.pckl", 'wb') as f:
@@ -62,30 +71,28 @@ class Dataset():
             yield [graphs[i] for i in batch]
 
 
-def generate_dataset(dataloader, test_ratio=0.1, num_samples_per_graph=3000, pos_ratio=0.5, h=1):
-    num_train = math.ceil((1-test_ratio) * len(dataloader))
-    num_test = len(dataloader) - num_train
-    print(f"dataset contains {len(dataloader)} graphs: using {num_train} for training and {num_test} for testing")
+def generate_dataset(dataloader, train_samples_per_graph=3000, test_samples_per_graph=300, pos_ratio=0.5, h=1):
+    print(f"dataset contains {len(dataloader)} graphs")
+    data = dataloader[0]
+
+    # Remove self-loops
+    data.edge_index = tg.utils.remove_self_loops(data.edge_index)[0]
 
     print("generating training graphs...")
     train_graphs = []
-    for i in tqdm(range(num_train)):
-        data = dataloader[i]
-        train_graphs += sample_pos(data.edge_index, data.x, int(num_samples_per_graph * pos_ratio), h)
-        train_graphs += sample_neg(data.edge_index, data.x, int(num_samples_per_graph * (1-pos_ratio)), h)
+    train_graphs += sample_pos(data.edge_index, data.x, int(train_samples_per_graph * pos_ratio), h)
+    train_graphs += sample_neg(data.edge_index, data.x, int(train_samples_per_graph * (1-pos_ratio)), h)
     
     print("generating test graphs...")
     test_graphs = []
-    for i in tqdm(range(num_train, len(dataloader))):
-        data = dataloader[i]
-        test_graphs += sample_pos(data.edge_index, data.x, int(num_samples_per_graph * pos_ratio), h)
-        test_graphs += sample_neg(data.edge_index, data.x, int(num_samples_per_graph * (1-pos_ratio)), h)
+    test_graphs += sample_pos(data.edge_index, data.x, int(test_samples_per_graph * pos_ratio), h)
+    test_graphs += sample_neg(data.edge_index, data.x, int(test_samples_per_graph * (1-pos_ratio)), h)
     
     dataset = Dataset()
     dataset.train_graphs = train_graphs
     dataset.test_graphs = test_graphs
 
-    print(f"dataset generated: {len(train_graphs)} training graphs and {len(test_graphs)} testing graphs")
+    print(f"dataset generated: {len(train_graphs)} training graphs and {len(test_graphs)} test graphs")
 
     return dataset
 
@@ -102,9 +109,11 @@ def sample_pos(edge_index, node_feat, num_samples, h):
 
     pos_graphs = []
     for i in tqdm(range(num_samples)):
-        subgraph = subgraph_extraction(list(pos_edges[:, i].flatten()), edge_index, node_feat, h)
+        subgraph = subgraph_extraction(pos_edges[:, i].flatten().tolist(), edge_index, node_feat, h)
         line_subgraph_edge_index = to_line_graph(subgraph.edge_index, node_feat.shape[0])
-        pos_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([1])))
+        index01 = torch.where(torch.all(subgraph.edge_index == torch.tensor([[0],[1]]), dim=0))[0].item()
+
+        pos_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([1]), index01))
 
     return pos_graphs
 
@@ -119,12 +128,12 @@ def sample_neg(edge_index, node_feat, num_samples, h):
     for i in range(num_samples):
         neg_edge = torch.tensor([int(random() * node_feat.shape[0]), int(random() * node_feat.shape[0])]).view(2,1)
         while torch.any(torch.all(edge_index == neg_edge, dim=0)):
-            neg_edge = torch.tensor([int(random() * node_feat.shape[0]), int(random() * node_feat.shape[0])])
+            neg_edge = torch.tensor([int(random() * node_feat.shape[0]), int(random() * node_feat.shape[0])]).view(2,1)
         neg_edges.append(neg_edge)
 
     neg_graphs = []
     for i in tqdm(range(num_samples)):
-        subgraph = subgraph_extraction(list(neg_edges[i].flatten()), edge_index, node_feat, h)
+        subgraph = subgraph_extraction(neg_edges[i].flatten().tolist(), edge_index, node_feat, h)
         line_subgraph_edge_index = to_line_graph(subgraph.edge_index, node_feat.shape[0])
         neg_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([0])))
 
@@ -132,7 +141,7 @@ def sample_neg(edge_index, node_feat, num_samples, h):
 
 
 if __name__ == "__main__":
-    dataloader = tg.datasets.CoraFull(root='data')
-    dataset = generate_dataset(dataloader)
-    dataset.save('code/data/CoraDataset')
+    dataloaderEN = tg.datasets.Twitch(root='code/data', name="EN")
+    dataset = generate_dataset(dataloaderEN)
+    dataset.save('code/data/TwitchENDataset')
     print("dataset saved")

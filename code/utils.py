@@ -21,6 +21,7 @@ def subgraph_extraction(link, edge_index, node_feat, h=1):
     # fringe_from_0: the set of nodes that was first reached by expanding from node 0
     # fringe_from_1: the set of nodes that was first reached by expanding from node 1
     dist = 0
+    link = link.tolist() if isinstance(link, torch.Tensor) else link
     nodes = [link[0], link[1]]
     fringe_from_0 = set([link[0]])  
     fringe_from_1 = set([link[1]])  
