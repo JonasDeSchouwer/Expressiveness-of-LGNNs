@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 22 11:31:24 2019
-
-@author: lei.cai
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,7 +8,10 @@ from utils import to_line_graph_features
 
 
 class NodeConvGNN(torch.nn.Module):
-    def __init__(self, input_dim, hidden_dim=52, output_dim=1, num_convolutions=2):
+    def __init__(self, input_dim, hidden_dim=None, output_dim=1, num_convolutions=2):
+        if hidden_dim is None:
+            hidden_dim = input_dim
+
         super(NodeConvGNN, self).__init__()
         conv = tg.nn.GCNConv  # SplineConv  NNConv   GraphConv   SAGEConv
         self.convs = nn.ModuleList()
@@ -27,7 +22,7 @@ class NodeConvGNN(torch.nn.Module):
         self.linear1 = nn.Linear(2*hidden_dim, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x, g_edge_index, lg_edge_index):
+    def forward(self, x, g_edge_index, lg_edge_index, index01):
         # Do node convolutions
         for conv in self.convs:
             x = F.relu(conv(x, g_edge_index))
@@ -39,17 +34,20 @@ class NodeConvGNN(torch.nn.Module):
         x = F.relu(self.linear1(x))
 
         # Filter the output of the 0-1 edge
-        # TODO
-        raise Exception()
+        x = x[index01].unsqueeze(0)
 
         # Generate network outputs
-        x = self.linear2(x)
+        # sigmoid so we can use binary cross entropy loss
+        x = F.sigmoid(self.linear2(x))
 
         return x
         
 
 class EdgeConvGNN(torch.nn.Module):
-    def __init__(self, input_dim, hidden_dim=52, output_dim=1, num_convolutions=2):
+    def __init__(self, input_dim, hidden_dim=None, output_dim=1, num_convolutions=2):
+        if hidden_dim is None:
+            hidden_dim = input_dim
+
         super(EdgeConvGNN, self).__init__()
         conv = tg.nn.GCNConv  # SplineConv  NNConv   GraphConv   SAGEConv
 
@@ -61,7 +59,7 @@ class EdgeConvGNN(torch.nn.Module):
               
         self.linear2 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x, g_edge_index, lg_edge_index):
+    def forward(self, x, g_edge_index, lg_edge_index, index01):
         # Convert node features to line graph features
         x = to_line_graph_features(g_edge_index, x)
 
@@ -73,10 +71,10 @@ class EdgeConvGNN(torch.nn.Module):
             x = F.relu(conv(x, lg_edge_index))
 
         # Filter the output of the 0-1 edge
-        # TODO
-        raise Exception()
+        x = x[index01].unsqueeze(0)
 
         # Generate network outputs
-        x = self.linear2(x)
+        # sigmoid so we can use binary cross entropy loss
+        x = F.sigmoid(self.linear2(x))
 
         return x

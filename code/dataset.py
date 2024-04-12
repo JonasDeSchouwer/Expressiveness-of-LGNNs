@@ -113,7 +113,7 @@ def sample_pos(edge_index, node_feat, num_samples, h):
         line_subgraph_edge_index = to_line_graph(subgraph.edge_index, node_feat.shape[0])
         index01 = torch.where(torch.all(subgraph.edge_index == torch.tensor([[0],[1]]), dim=0))[0].item()
 
-        pos_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([1]), index01))
+        pos_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([1]).view(1,1), index01))
 
     return pos_graphs
 
@@ -135,7 +135,9 @@ def sample_neg(edge_index, node_feat, num_samples, h):
     for i in tqdm(range(num_samples)):
         subgraph = subgraph_extraction(neg_edges[i].flatten().tolist(), edge_index, node_feat, h)
         line_subgraph_edge_index = to_line_graph(subgraph.edge_index, node_feat.shape[0])
-        neg_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([0])))
+        index01 = torch.where(torch.all(subgraph.edge_index == torch.tensor([[0],[1]]), dim=0))[0].item()
+
+        neg_graphs.append(Graph(subgraph.edge_index, subgraph.x, line_subgraph_edge_index, torch.tensor([0]).view(1,1), index01))
 
     return neg_graphs
 

@@ -18,6 +18,7 @@ class Configs:
     Mostly the same hyperparameters were taken as in the LGLP experiments, to be found on https://github.com/LeiCaiwsu/LGLP
     """
     input_dim = 130 # 128 features from the Twitch dataset + 2 encoding the distance to the target nodes
+    hidden_dim = 20      # chosen to limit expressivity
     epochs = 500
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     optimizer = 'Adam'      # like in LGLP
@@ -36,13 +37,12 @@ def evaluate(model: nn.Module, set: List[Graph], loss_func=None):
     n_accurate = 0
     for graph in set:
 
-        output = model(graph.node_feat, graph.edge_index, graph.line_edge_index)
+        output = model(graph.node_feat, graph.edge_index, graph.line_edge_index, graph.index01)
         if loss_func is not None:
-            loss += loss_func(output, graph.targets).item()
+            loss += loss_func(output, graph.targets.to(torch.float)).item()
 
         prediction = torch.where(output > 0.5, 1, 0)
-        n_accurate += torch.sum(prediction == graph.targets)
-        assert n_accurate in [0,1]
+        n_accurate += 1 if (prediction == graph.targets).item() else 0
 
     return {
         "loss": loss,
@@ -72,10 +72,10 @@ def train(model: nn.Module, dataset: Dataset, conf: Configs, run_name=None):
         for batch in dataset.iter_batches(batch_size=conf.batch_size):
             optim.zero_grad()
 
-            loss = torch.tensor(0).float()
+            loss = torch.tensor(0).float().to(conf.device)
             for graph in batch:
-                output = model(graph.node_feat, graph.edge_index, graph.line_edge_index)
-                loss += loss_func(output, graph.targets)
+                output = model(graph.node_feat, graph.edge_index, graph.line_edge_index, graph.index01)
+                loss += loss_func(output, graph.targets.to(torch.float))
             loss /= len(batch)
             loss.backward()
             optim.step()
