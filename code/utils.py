@@ -52,7 +52,7 @@ def subgraph_extraction(link, edge_index, node_feat, h=1):
         nodes_dist_to_1 += [dist] * len(fringe_from_both)
 
     # create and label subgraph
-    sub_edge_index, _ = tg.utils.subgraph(nodes, edge_index, relabel_nodes=True)
+    sub_edge_index, _ = tg.utils.subgraph(nodes, edge_index, relabel_nodes=True, num_nodes=node_feat.shape[0])
     sub_node_feat = torch.cat((
         node_feat[nodes, :],
         torch.tensor(nodes_dist_to_0).view(-1, 1).float(),

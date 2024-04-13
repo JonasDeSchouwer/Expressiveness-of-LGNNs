@@ -19,8 +19,7 @@ class NodeConvGNN(torch.nn.Module):
         for _ in range(1, num_convolutions):
             self.convs.append(conv(hidden_dim, hidden_dim, cached=False))
               
-        self.linear1 = nn.Linear(2*hidden_dim, hidden_dim)
-        self.linear2 = nn.Linear(hidden_dim, output_dim)
+        self.linear = nn.Linear(2*hidden_dim, output_dim)
 
     def forward(self, x, g_edge_index, lg_edge_index, index01):
         # Do node convolutions
@@ -29,16 +28,13 @@ class NodeConvGNN(torch.nn.Module):
 
         # Convert node features to line graph features
         x = to_line_graph_features(g_edge_index, x)
-        
-        # First linear layer to get rich edge features
-        x = F.relu(self.linear1(x))
 
         # Filter the output of the 0-1 edge
         x = x[index01].unsqueeze(0)
 
         # Generate network outputs
         # sigmoid so we can use binary cross entropy loss
-        x = F.sigmoid(self.linear2(x))
+        x = F.sigmoid(self.linear(x))
 
         return x
         
@@ -51,20 +47,16 @@ class EdgeConvGNN(torch.nn.Module):
         super(EdgeConvGNN, self).__init__()
         conv = tg.nn.GCNConv  # SplineConv  NNConv   GraphConv   SAGEConv
 
-        self.linear1 = nn.Linear(2*input_dim, hidden_dim)
-
         self.convs = nn.ModuleList()
-        for _ in range(0, num_convolutions):
+        self.convs.append(conv(input_dim*2, hidden_dim, cached=False))
+        for _ in range(1, num_convolutions):
             self.convs.append(conv(hidden_dim, hidden_dim, cached=False))
               
-        self.linear2 = nn.Linear(hidden_dim, output_dim)
+        self.linear = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x, g_edge_index, lg_edge_index, index01):
         # Convert node features to line graph features
         x = to_line_graph_features(g_edge_index, x)
-
-        # First linear layer to get edge features
-        x = F.relu(self.linear1(x))
 
         # Do edge convolutions
         for conv in self.convs:
@@ -75,6 +67,6 @@ class EdgeConvGNN(torch.nn.Module):
 
         # Generate network outputs
         # sigmoid so we can use binary cross entropy loss
-        x = F.sigmoid(self.linear2(x))
+        x = F.sigmoid(self.linear(x))
 
         return x
