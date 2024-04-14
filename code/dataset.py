@@ -32,6 +32,13 @@ class Graph:
         self.targets = targets
         self.index01 = index01
 
+    def to(self, device: torch.device):
+        self.edge_index = self.edge_index.to(device)
+        self.node_feat = self.node_feat.to(device)
+        self.line_edge_index = self.line_edge_index.to(device)
+        self.targets = self.targets.to(device)
+        return self
+
 
 class Dataset():
     train_graphs: List[Graph]
@@ -45,10 +52,8 @@ class Dataset():
 
     def to(self, device: torch.device):
         for graph in self.train_graphs + self.test_graphs:
-            graph.edge_index = graph.edge_index.to(device)
-            graph.node_feat = graph.node_feat.to(device)
-            graph.line_edge_index = graph.line_edge_index.to(device)
-            graph.targets = graph.targets.to(device)
+            graph.to(device)
+        return self
     
     def save(self, folder):
         with open(f"{folder}/train_graphs.pckl", 'wb') as f:
@@ -71,7 +76,7 @@ class Dataset():
             yield [graphs[i] for i in batch]
 
 
-def generate_dataset(dataloader, train_samples_per_graph=3000, test_samples_per_graph=300, pos_ratio=0.5, h=1):
+def generate_dataset_single_graph(dataloader, train_samples_per_graph=3000, test_samples_per_graph=300, pos_ratio=0.5, h=1):
     print(f"dataset contains {len(dataloader)} graphs")
     data = dataloader[0]
 
@@ -87,6 +92,40 @@ def generate_dataset(dataloader, train_samples_per_graph=3000, test_samples_per_
     test_graphs = []
     test_graphs += sample_pos(data.edge_index, data.x, int(test_samples_per_graph * pos_ratio), h)
     test_graphs += sample_neg(data.edge_index, data.x, int(test_samples_per_graph * (1-pos_ratio)), h)
+    
+    dataset = Dataset()
+    dataset.train_graphs = train_graphs
+    dataset.test_graphs = test_graphs
+
+    print(f"dataset generated: {len(train_graphs)} training graphs and {len(test_graphs)} test graphs")
+
+    return dataset
+
+
+def generate_dataset_multi_graph(dataloader, samples_per_graph=300, pos_ratio=0.5, test_ratio=0.1, h=1):
+    num_train = int(len(dataloader) * (1-test_ratio))
+    num_test = len(dataloader) - num_train
+    print(f"dataset contains {len(dataloader)} graphs: using {num_train} for training and {num_test} for testing")
+
+    train_graphs = []
+    for i in range(num_train):
+        data = dataloader[i]
+
+        data.edge_index = tg.utils.remove_self_loops(data.edge_index)[0]    # Remove self-loops
+
+        print(f"generating training graphs for graph {i}/{num_train}...")
+        train_graphs += sample_pos(data.edge_index, data.x, int(samples_per_graph * pos_ratio), h)
+        train_graphs += sample_neg(data.edge_index, data.x, int(samples_per_graph * (1-pos_ratio)), h)
+
+    test_graphs = []
+    for i in range(num_train, num_train+num_test):
+        data = dataloader[i]
+
+        data.edge_index = tg.utils.remove_self_loops(data.edge_index)[0]    # Remove self-loops
+
+        print(f"generating test graphs for graph {i}/{num_test}...")
+        test_graphs += sample_pos(data.edge_index, data.x, int(samples_per_graph * pos_ratio), h)
+        test_graphs += sample_neg(data.edge_index, data.x, int(samples_per_graph * (1-pos_ratio)), h)
     
     dataset = Dataset()
     dataset.train_graphs = train_graphs
@@ -143,7 +182,7 @@ def sample_neg(edge_index, node_feat, num_samples, h):
 
 
 if __name__ == "__main__":
-    dataloader = tg.datasets.HeterophilousGraphDataset(root='code/data', name="Minesweeper")
-    dataset = generate_dataset(dataloader)
-    dataset.save('code/data/MinesweeperDataset')
+    dataloader = tg.datasets.PPI(root='code/data')
+    dataset = generate_dataset_multi_graph(dataloader, samples_per_graph=300)
+    dataset.save('code/data/PPIDataset')
     print("dataset saved")

@@ -25,6 +25,7 @@ class Configs:
     learning_rate = 5e-3    # like in LGLP
     batch_size = 50         # like in LGLP
     eval_auc = False
+    save_epochs = 10     # save model every 10 epochs
 
 
 def evaluate_breakdown(outputs: torch.Tensor, targets: torch.Tensor, threshold: float=0.5):
@@ -127,13 +128,16 @@ def train(model: nn.Module, dataset: Dataset, conf: Configs, run_name=None):
         if epoch % math.ceil(conf.epochs/100) == 0:
             print (f"epoch {epoch}: {train_eval['loss']}")
 
+        if epoch % conf.save_epochs == 0:
+            torch.save(model.state_dict(), f"study/runs/{run_name}-{epoch}.pth")
+
     writer.close()
 
 
 def main():
     # Create configurations
     conf = Configs()
-    train_node_conv = False
+    train_node_conv = True
     train_edge_conv = True
 
     # Load dataset
