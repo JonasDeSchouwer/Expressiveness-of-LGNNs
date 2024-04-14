@@ -42,6 +42,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{wrapfig}
+\usepackage{multirow}
 
 
 
@@ -107,29 +108,30 @@
 
 \begin{abstract}
     In this paper we characterize the expressivity of graph neural networks operating on line graphs in terms of their ability to distinguish non-isomorphic graphs. We introduce two new variations of the Weisfeiler-Leman test tailored to edge colourings, which we call the Line Weisfeiler-Leman Test ($\lwl$) and the Weisfeiler-Leman Test with Edge Decoding ($\wledge$). We prove that MPNNs operating on line graphs (LG-MPNNs) are at most as expressive as $\lwl$ and that there exists an LG-MPNNs that is equally expressive as $\lwl$, thereby establishing both an upper and a lower bound on their expressivity. We further show that $\lwl$ is strictly less expressive than $\wledge$ and that $\wledge$ is equally expressive as the standard Weisfeiler-Leman test.
+    Finally, we empirically compare the expressivities of LG-MPNNs and normal MPNNs for the task of link prediction.
 \end{abstract}
 
 
 \section{Introduction}
 % Start with graph structured data - ubiquitous in real-world applications, such as social networks, biological networks, recommendation systems, material science, traffic networks, etc.
-Graphs are a natural way to structure data in many application domains, such as social networks, biological networks, recommendation systems, materials science, traffic networks, etc.
+Graphs are a natural way to structure data in many application domains, such as social networks, biological networks, recommendation systems, materials science and traffic networks.
 % Graph neural networks
 Following the many successes of deep learning, graph machine learning has emerged as a powerful tool to learn from graph-structured data. There are various tasks that are of interest, including classification, link prediction and property prediction, but also graph generation and community detection.
 
 % Line graph neural networks - especially natural for the task of link prediction
-Recently, several works have investigated the use of line graphs in graph machine learning \cite{cai2021line,choudhary2021atomistic}. Line graphs offer a dual perspective, where nodes in the line graph correspond to edges in the original graph. This perspective is especially natural for the task of link prediction, as it converts a task on pairs of nodes to the simpler and better studied task of node classification.
+Recently, several works have investigated the use of line graphs in graph machine learning \cite{cai2021line,choudhary2021atomistic,liu2021indigo}. Line graphs offer a dual perspective, where nodes in the line graph correspond to edges in the original graph. This perspective is especially natural for the task of link prediction, as it converts a task on pairs of nodes to the simpler and better studied task of node classification.
 
 % Expressive power
 The theoretical understanding of these models, however, is still in its infancy.
 % State research question
-Therefore, we aim in this work to characterize the expressive power of graph neural networks operating on line graphs. Studying the expressiveness like this can improve our understanding of the strenghts and limitations of the model, thus paving the way for improvements and guiding model selection for specific tasks. We will specifically focus on message-passing neural networks operating on line graphs, henceforth called Line Graph MPNNs (LG-MPNNs).
+Therefore, our objective in this study is to characterize the expressive power of graph neural networks operating on line graphs. Studying expressiveness can improve our understanding of the strenghts and limitations of the model, paving the way for improvements and guiding model selection for specific tasks. We focus specifically on message-passing neural networks operating on line graphs, henceforth called Line Graph MPNNs (LG-MPNNs). We theoretically characterize their expressiveness in terms of their ability to differentiate non-isomorphic graphs and empirically measure it in terms of their efficacy for function approximation.
 
 % Summarize contributions
 Our contributions can be summarized as follows:
 \begin{itemize}
-    \item We introduce two new variations of the Weisfeiler-Leman test tailored to edge colourings, which we call the \emph{Line Weisfeiler-Leman Test} (LWL) and the \emph{Weisfeiler-Leman Test with Edge Decoding} (WL-ED).
-    \item We prove both an upper and a lower bound on the expressivity of LG-MPNNs: they are at most as expressive as LWL and there exist Line Graph MPNNs that are equally expressive as LWL.
-    \item We relate LWL and WL-ED to each other and to the standard Weisfeiler-Leman test for node colouring. We prove that LWL is strictly less expressive than WL-ED and that WL-ED is equally expressive as the standard Weisfeiler-Leman test.
+    \item We introduce two new variations of the Weisfeiler-Leman test tailored to edge colourings, which we call the \emph{Line Weisfeiler-Leman Test} ($\lwl$) and the \emph{Weisfeiler-Leman Test with Edge Decoding} ($\wledge$).
+    \item We prove both an upper and a lower bound on the expressivity of LG-MPNNs: they are at most as expressive as $\lwl$ and there exist Line Graph MPNNs that are equally expressive as $\lwl$.
+    \item We relate $\lwl$ and $\wledge$ to each other and to the standard Weisfeiler-Leman test for node colouring. We prove that $\lwl$ is strictly less expressive than $\wledge$ and that $\wledge$ is equally expressive as the standard Weisfeiler-Leman test.
 \end{itemize}
 
 
@@ -148,10 +150,9 @@ The most commonly used class of GNNs are message passing neural networks (MPNNs)
 % state both graph/node distinguishability and function approximation as ways to characterize expressiveness
 The expressive power of a parametrized model refers to the range of functions and patterns that it can represent. 
 % TODO: something about general neural networks?
-In the context of graph neural networks, there are various ways to characterize expressiveness. The most common one is the ability to distinguish non-isomorphic graphs, but function approximation \cite{maron2019universality}, substructure counting \cite{chen2020can}, spectral decomposition \cite{balcilar2020analyzing} and logical representation \cite{barcelo2020logical} are other viable criterions. Interestingly, \cite{chen2019equivalence} showed a theoretical equivalence between the expressiveness in terms of graph distinguishability and function approximation on graphs.
+In the context of graph neural networks, there are various ways to characterize expressiveness. The most common one is the ability to distinguish non-isomorphic graphs, but function approximation \cite{maron2019universality}, substructure counting \cite{chen2020can}, spectral decomposition \cite{balcilar2020analyzing} and logical representation \cite{barcelo2020logical} are other viable criterions. Our theoretical section concentrates on expressiveness in terms of distinguishing non-isomorphic graphs, while our empirical evaluation centers on function approximation, as this is more practical to evaluate. It should be noted, however, that \cite{chen2019equivalence} showed a theoretical equivalence between both notions of expressivity.
 
-In this work, we focus on expressiveness in terms of distinguishing non-isomorphic graphs.
-The usual way to quantify this expressiveness is through a comparison with various forms of the Weisfeiler-Leman (WL) test \cite{weisfeiler1968reduction}. Importantly, MPNNs are known to be at most as expressive as WL \cite{morris2019weisfeiler}, while \cite{xu2018powerful} constructed a class of GNNs that is equally expressive as WL. Other works have introduced other variations of the WL-test, such as the $k$-WL hierarchy \cite{morris2019weisfeiler} and the Relational Asymmetric Local 2-WL \cite{huang2024theory}.
+The usual way to quantify expressiveness in terms of graph distinguishability is through a comparison with various forms of the Weisfeiler-Leman (WL) test \cite{weisfeiler1968reduction}. Importantly, MPNNs are known to be at most as expressive as WL \cite{morris2019weisfeiler}, while \cite{xu2018powerful} constructed a class of GNNs that is equally expressive as WL. Other works have introduced other variations of the WL-test, such as the $k$-WL hierarchy \cite{morris2019weisfeiler} and the Relational Asymmetric Local 2-WL \cite{huang2024theory}.
 Our work aligns with this line of research by introducing two new variations of the WL-test tailored to edge colourings, by characterizing the expressive power of LG-MPNNs in terms of these tests, and by placing these tests in the $k$-WL hierarchy.
 
 
@@ -161,7 +162,7 @@ Most methods that use line graphs in graph machine learning do so in combination
 Further, various methods operate on the line graph implicitly by computing edge attributes, 
 Generalized Message Passing \cite{battaglia2018relational} is an example of this.
 A few approaches have also been proposed that operate only on the line graph, such as LGLP \cite{cai2021line} and INDIGO \cite{liu2021indigo}.
-We limit the scope of this study to these approaches, as their analysis will also offer insights into the compound methods. To the best of our knowledge, there has been no theoretical exploration of these models to date.
+We limit the scope of this study to the latter family of approaches, as their analysis will also offer insights into the compound methods. To the best of our knowledge, there has been no theoretical exploration of these models to date.
 
 
 
@@ -193,13 +194,7 @@ We say that an algorithm $\mca$ that generates node features on graphs \emph{dis
 
 
 
-
-\section{Proposed Approach}
-
-
-
-
-\section{Theory}
+\section{Theory}    \label{sec:theory}
 % TODO: write something about edge colour initializations
 
 % define lwl and wledge
@@ -287,6 +282,84 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
 
 \section{Experiments}
 
+In this section, we empirically compare the expressivities of MPNNs with an edge decoder and LG-MPNNs in terms of their ability to approximate functions for the task of link prediction.
+Based on the theoretical results -- i.e. Theorem \ref{thm:lwl-less-than-wledge}, the fact that there exists an MPNN equally expressive as the WL-test \cite{xu2018powerful} and the theoretical equivalence between graph isomorphism testing and function approximation \cite{chen2019equivalence} -- we hypothesize that MPNNs with an edge decoder will be more expressive than LG-MPNNs. We will evaluate this hypothesis by comparing the performance of both models on a link prediction task.
+
+\paragraph{Datasets} We searched for datasets that satisfy the following criteria: (1) they consist of undirected, simple graphs with node features, (2) the link prediction task makes sense in the context of the dataset, and (3) the dataset is publicly available. Considering these criteria, we chose the Twitch EN dataset \cite{rozemberczki2021multiscale} and the 
+protein-protein interaction (PPI) dataset \cite{zitnik2017predicting}. In the Twitch dataset, nodes correspond to Twitch users and edges to mutual friendship, while node features are the games liked, location and streaming habits. In the PPI dataset, nodes represent proteins and edges are interactions between them, while node features are positional gene sets, motif gene sets and immunological signatures.
+To preprocess these two datasets for the link prediction task, we followed the setup from \cite{cai2021line}. This consists of sampling pairs of nodes (50\% positive and 50\% negative links) and extracting the 1-hop enclosing subgraph. Unlike them, however, we store both the subgraph and its line graph, as we will use both in our experiments. The two target nodes are connected to allow message passing between the target nodes, and each node feature is enhanced with the distance to both target nodes. Each such graph is endowed with a single target: $1$ for positive links and $0$ for negative links so that the task is supervised binary classification.
+For PPI we sampled 5058 train graphs and 528 test graphs, where the train and test set come from different tissues in the human body. For the Twitch dataset, we sampled . 
+
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{figures/architectures.PNG}
+    \caption{The models used in this experiment}
+    \label{fig:architectures}
+\end{figure}
+
+
+\paragraph{Architecture} The two models we will compare are instances of an MPNN with an edge decoder (MPNN+ED) and of an LG-MPNN, respectively. Their concrete architectures are visualized in Figure \ref{fig:architectures}.
+Both models use a function $\xi$ that transforms node features on $G$ to node features on $L(G)$ by concatenating the features of both endpoints. This is not permuation invariant to the order of the endpoints, but we expect the models to learn this invariance.
+During inference, both models start from the input features on a graph $G$.
+The MPNN+ED model first performs two convolutions on $G$, then applies $\xi$ to compute edge features and finally selects the target link and applies a linear layer to predict the link existence.
+The LG-MPNN model first applies $\xi$, then performs two convolutions on $L(G)$ and finally selects the target link and applies a linear layer to predict the link existence.
+Note that the LG-MPNN model has slightly more learnable parameters than the MPNN+ED model, because the first convolutional layer has twice the number of input features.
+
+
+\begin{wraptable}{r}{0.34\textwidth}
+    \centering
+    \small
+    \caption{Hyperparameters}   \label{table:hyperparameters}
+    \begin{tabular}{l l}
+        \toprule
+        \textbf{Hyperparameter} & \textbf{Value} \\
+        \midrule
+        Objective & BCE Loss \\
+        Optimizer & Adam \\
+        Learning Rate & $5\cdot10^{-3}$ \\
+        Epochs & $80$ \\
+        Batch Size & $50$ \\
+        \# Convolutions & $2$ \\
+        Hidden Dimension & $20/52$ \\
+        Nonlinearity & ReLU \\
+        \bottomrule
+    \end{tabular}
+\end{wraptable}
+
+
+\paragraph{Hyperparameters and metrics} The hyperparameters for this experiment are summarized in Table \ref{table:hyperparameters}. Most of these were taken from the implementation of \cite{cai2021line}, but we use only 80 epochs as experiments showed that this was sufficient for convergence. We examine three setups: the Twitch dataset with $d_{hid}=20$ and the PPI dataset with $d_{hid}\in\set{20,52}$.
+We evaluate the models in terms of test accuracy and test AUC, which are standard metrics for binary classification tasks. The test performance quantifies how well the model was able to capture the underlying function in the dataset. Further, we report the training accuracy and AUC to give an indication of the capacity of the model. Finally, we measure the runtime of the models to give a (relative) indication of their efficiency.
+
+
+\begin{table}[ht]
+    \centering
+    \caption{Experimental Results}
+    \label{tab:results}
+    \begin{tabular}{ccccccc}
+        \textbf{Experiment} & \textbf{Model} & \textbf{Test Acc} & \textbf{Test AUC} & \textbf{Train Acc} & \textbf{Train AUC} & \textbf{Runtime} \\
+        \hline
+        \multirow{2}{*}{\shortstack{TwitchEN \\ {\scriptsize $d_{hid}=20$}}}
+        & MPNN+ED & $91.3$ & $93.8$ & $100.0$ & $99.8$ & $23.1\text{min}$ \\
+        & LG-MPNN & $91.0$ & $81.9$ & $99.9$ & $88.3$ & $105.1\text{min}$ \\
+        \hline
+        \multirow{2}{*}{\shortstack{PPI \\ {\scriptsize $d_{hid}=20$}}}
+        & MPNN+ED & $79.7$ & $85.2$ & $93.2$ & $98.5$ & $42.1\text{min}$ \\
+        & LG-MPNN & $75.8$ & $80.0$ & $96.6$ & $99.3$ & $85.7\text{min}$ \\
+        \hline
+        \multirow{2}{*}{\shortstack{PPI \\ {\scriptsize $d_{hid}=52$}}}
+        & MPNN+ED & $75.4$ & $77.4$ & $100.0$ & $99.3$ & $37.6\text{min}$ \\    
+        % 1.17h for full training
+        & LG-MPNN & $75.0$ & $77.5$ & $99.6$ & $98.4$ & $96.3\text{min}$ \\
+        % 3.03h for full training
+        \hline
+    \end{tabular}
+\end{table}
+
+The results are displayed in Table \ref{tab:results}. They show a slightly better test performance for MPNN+ED compared to LG-MPNN despite its slightly smaller number of parameters. This would confirm our hypothesis that MPNN+ED is more expressive, although the difference is not very significant and further work is thus required to reach more conclusive results.
+Further, the training performance is near-perfect for both models, indicating that the models both have sufficient capacity to learn the underlying function. Because of this fact, the difference is not significant enough to draw any conclusions about the relative capacity of the models.
+Finally, the runtime of the LG-MPNN is consistently higher than that of the MPNN+ED, which is due to the considerably larger size of the line graph compared to the original graph. For instance, in PPI the average line graph has 1572 nodes and 59900 edges, compared to 92 nodes and 1572 edges for the original graph.
+Given the similar performance for both models, the theoretical results from section \ref{sec:theory} that guarantee the higher expressiveness of MPNN+ED and the higher efficiency of MPNN+ED, we conclude that -- at least in this setting with a simple, node-attributed graph -- MPNN+ED is the better choice for the link prediction task.
 
 
 \section{Outlook and Conclusion}
@@ -295,6 +368,21 @@ Afterwards, we will show that $\lwl$ is less expressive than $\wledge$ (Theorem 
 % Extend to directed graphs
 % Extend to higher-order lemmas
 % Extend to knowledge graphs
+
+% Experiment to evaluate power in terms of graph distinguishability, like in the very recent paper `The expressive power of pooling in Graph Neural Networks' with their synthetic EXPWL1 dataset, that consists of pairs of non-isomorphic graphs distinguishable by the WL-test.
+
+In this paper, we have introduced two new variations of the Weisfeiler-Leman test tailored to edge colourings: the Line Weisfeiler-Leman Test ($\lwl$) and the Weisfeiler-Leman Test with Edge Decoding ($\wledge$).
+We have theoretically characterized the power for graph distinguishability of LG-MPNN, $\lwl$, $\wledge$ and the standard WL-test, providing both an upper and a lower bound on the expressivity of LG-MPNNs and placing them in the $k$-WL hierarchy.
+%
+Finally, we have empirically compared the expressiveness of MPNNs with an edge decoder to that of LG-MPNNs in terms of their ability to approximate functions for the task of link prediction. Our results indicate that our hypothesis -- that MPNNs with an edge decoder are more expressive than LG-MPNNs -- is likely correct, but the results are not significant enought to draw definite conclusions.
+
+To obtain more conclusive results, the experiment in our paper should be extended to a harder and larger link prediction task, such that the influence of the model's capacity and generalization ability becomes more apperent from the training and test performance, respectively. Further, the experiment should be repeated on more and larger datasets to ensure the results are not dataset-specific. Finally, the discrepancy between the number of learnable parameters in the two models should be eliminated to nullify its influence on the results. This can be done by modifying the architecture, which was not done in this work because we did not have the computational resources to train deeper models.
+
+The theoretical framework proposed in this paper can be a stepping stone for further research in several directions.
+First, new variations of the WL-test could be devised tailored to edge-attributed graphs, directed graphs and knowledge graphs, which can all be related to each other and the existing graph isomorphism tests in the literature.
+Second, the impact of different node features on the expressiveness of LG-MPNNs and MPNNs with an edge decoder could be studied, as has been done for normal MPNNs \cite{sato2021random,feldman2022weisfeiler}.
+Finally, the theoretical results could be further validated in practice by an alternative experiment that directly evaluates the power of the models in terms of graph distinguishability. This recent paper \cite{bianchi2024expressive}, for instance, uses a synthetic dataset consisting of pairs of non-isomorphic graphs distinguishable by the WL-test. The same dataset could be applied to empirically study the expressivity of LG-MPNNs and MPNNs with an edge decoder, in terms of graph distinguishability.
+
 
 
 
@@ -313,40 +401,38 @@ The proof of this theorem consists of two parts. In Lemma \ref{lemma:lwl-less-th
         \wledge\iter{t}(G) \preceq \lwl\iter{t}(G)
     \end{equation}
     Fix the graph $G$ and shorten the notation $\wl\iter{t} \coloneq \wl\iter{t}(G)$ for clarity (and analogous for $\lwl$ and $\wledge$). The base case $t=0$ is trivially true, because the initial edge colourings of $\wledge$ and $\lwl$ are the same. For the induction step, assume (\ref{eq:wledge-refinement-of-lwl-induction-hypothesis}) holds for $t$. Then take any $uv, xy \in L(G)$ for which $\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)$. Due to the injectivity of $\hash$ and the decoders $\dec$, the following implications hold:
-    \begin{equation}
-        \begin{split}
-            &\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)
-            \\
-            &\RightarrowAsWideAsWLOGArrow
-            \set{\wl\iter{t+1}(u),\wl\iter{t+1}(v)} = \set{\wl\iter{t+1}(x),\wl\iter{t+1}(y)}
-            \\
-            &\makebox[\WLOGarrowwidth][c]{$\stackrel{\text{WLOG}}{\Rightarrow}$}
-            \enspace \wl\iter{t+1}(u) = \wl\iter{t+1}(x) \wedge \wl\iter{t+1}(v) = \wl\iter{t+1}(y)
-            \\
-            &\RightarrowAsWideAsWLOGArrow
-            \begin{cases}
-                \wl\iter{t}(u) = \wl\iter{t}(x) \wedge \multiset{\wl\iter{t}(d_u) \mid d_u \in \nbh(u)} = \multiset{\wl\iter{t}(d_x) \mid d_x \in \nbh(x)} \\
-                \wl\iter{t}(v) = \wl\iter{t}(y) \wedge \multiset{\wl\iter{t}(d_v) \mid d_v \in \nbh(v)} = \multiset{\wl\iter{t}(d_y) \mid d_y \in \nbh(y)}
-            \end{cases}
-            \\
-            &\RightarrowAsWideAsWLOGArrow 
-            \begin{cases}
-                \wledge\iter{t}(uv) = \wledge\iter{t}(xy) \\
-                \multiset{\wledge\iter{t}(ud_u) \mid d_u \in \nbh(u)} = \multiset{\wledge\iter{t}(xd_x) \mid d_x \in \nbh(x)} \\
-                \multiset{\wledge\iter{t}(vd_v) \mid d_v \in \nbh(v)} = \multiset{\wledge\iter{t}(yd_y) \mid d_y \in \nbh(y)}
-            \end{cases}
-            \\
-            &\makebox[\WLOGarrowwidth][c]{$\stackrel{(\ref{eq:wledge-refinement-of-lwl-induction-hypothesis})}{\Rightarrow}$}
-            \begin{cases}
-                \lwl\iter{t}(uv) = \lwl\iter{t}(xy) \\
-                \multiset{\lwl\iter{t}(ud_u) \mid d_u \in \nbh(u)} = \multiset{\lwl\iter{t}(xd_x) \mid d_x \in \nbh(x)} \\
-                \multiset{\lwl\iter{t}(vd_v) \mid d_v \in \nbh(v)} = \multiset{\lwl\iter{t}(yd_y) \mid d_y \in \nbh(y)}
-            \end{cases}
-            \\
-            &\RightarrowAsWideAsWLOGArrow
-            \lwl\iter{t+1}(uv) = \lwl\iter{t+1}(xy)
-        \end{split}
-    \end{equation}
+\begin{align*}
+        &\wledge\iter{t+1}(uv) = \wledge\iter{t+1}(xy)
+        \\
+        &\RightarrowAsWideAsWLOGArrow
+        \set{\wl\iter{t+1}(u),\wl\iter{t+1}(v)} = \set{\wl\iter{t+1}(x),\wl\iter{t+1}(y)}
+        \\
+        &\makebox[\WLOGarrowwidth][c]{$\stackrel{\text{WLOG}}{\Rightarrow}$}
+        \enspace \wl\iter{t+1}(u) = \wl\iter{t+1}(x) \wedge \wl\iter{t+1}(v) = \wl\iter{t+1}(y)
+        \\
+        &\RightarrowAsWideAsWLOGArrow
+        \begin{cases}
+            \wl\iter{t}(u) = \wl\iter{t}(x) \wedge \multiset{\wl\iter{t}(d_u) \mid d_u \in \nbh(u)} = \multiset{\wl\iter{t}(d_x) \mid d_x \in \nbh(x)} \\
+            \wl\iter{t}(v) = \wl\iter{t}(y) \wedge \multiset{\wl\iter{t}(d_v) \mid d_v \in \nbh(v)} = \multiset{\wl\iter{t}(d_y) \mid d_y \in \nbh(y)}
+        \end{cases}
+        \\
+        &\RightarrowAsWideAsWLOGArrow 
+        \begin{cases}
+            \wledge\iter{t}(uv) = \wledge\iter{t}(xy) \\
+            \multiset{\wledge\iter{t}(ud_u) \mid d_u \in \nbh(u)} = \multiset{\wledge\iter{t}(xd_x) \mid d_x \in \nbh(x)} \\
+            \multiset{\wledge\iter{t}(vd_v) \mid d_v \in \nbh(v)} = \multiset{\wledge\iter{t}(yd_y) \mid d_y \in \nbh(y)}
+        \end{cases}
+        \\
+        &\makebox[\WLOGarrowwidth][c]{$\stackrel{(\ref{eq:wledge-refinement-of-lwl-induction-hypothesis})}{\Rightarrow}$}
+        \begin{cases}
+            \lwl\iter{t}(uv) = \lwl\iter{t}(xy) \\
+            \multiset{\lwl\iter{t}(ud_u) \mid d_u \in \nbh(u)} = \multiset{\lwl\iter{t}(xd_x) \mid d_x \in \nbh(x)} \\
+            \multiset{\lwl\iter{t}(vd_v) \mid d_v \in \nbh(v)} = \multiset{\lwl\iter{t}(yd_y) \mid d_y \in \nbh(y)}
+        \end{cases}
+        \\
+        &\RightarrowAsWideAsWLOGArrow
+        \lwl\iter{t+1}(uv) = \lwl\iter{t+1}(xy)
+    \end{align*}
     We have shown that $\wledge\iter{t+1}(G) \preceq \lwl\iter{t+1}(G)$, which concludes the induction step.
     Because both $\lwl$ and $\wl$ are union-preserving, it follows from Lemma \ref{lemma:refinement-distinguishability} that $\lwl$ is less expressive than $\wledge$.
 \end{proof}

@@ -50,7 +50,7 @@ def evaluate_breakdown(outputs: torch.Tensor, targets: torch.Tensor, threshold: 
 
 def evaluate(model: nn.Module, set: List[Graph], conf: Configs, loss_func=None, eval_auc=False):
     """
-    Returns a dict with keys "loss" and "acc" for the given model and dataset.
+    Returns a dict with keys "loss", "acc" and "auc" for the given model and dataset.
     """
 
     model.eval()
@@ -74,7 +74,7 @@ def evaluate(model: nn.Module, set: List[Graph], conf: Configs, loss_func=None, 
             eval = evaluate_breakdown(outputs, targets, threshold=threshold)
             tprs.append(eval["tpr"])
             fprs.append(eval["fpr"])
-        auc = torch.trapz(torch.tensor(tprs), torch.tensor(fprs))
+        auc = torch.trapz(torch.tensor(tprs).flip(dims=(0,)), torch.tensor(fprs).flip(dims=(0,)))
 
     return {
         "loss": loss,
