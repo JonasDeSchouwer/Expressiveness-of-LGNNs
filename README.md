@@ -4,9 +4,8 @@
 
 ## Introduction
 
-Welcome to the repository for my GDL mini project!
-With the code in this repository, I obtained the results of the experiment at the end of my report.
-Please find the assignment [here](assignment.pdf) and the report [here](report.pdf).
+Welcome to this project, where I researched the expressiveness of Line Graph Neural Networks! Please find the project report [here](report.pdf).
+With the code in this repository, I obtained the results of the experiment at the end of the report.
 
 
 ## Structure
